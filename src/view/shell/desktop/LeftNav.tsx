@@ -33,7 +33,7 @@ import {emitSoftReset} from '#/state/events'
 import {useHomeBadge} from '#/state/home-badge'
 import {useFetchHandle} from '#/state/queries/handle'
 import {useUnreadMessageCount} from '#/state/queries/messages/list-conversations'
-import {useModerationInboxUnreadCountQuery} from '#/state/queries/moderation-inbox'
+import {useModerationInboxBadgeCount} from '#/state/queries/moderation-inbox'
 import {useUnreadNotifications} from '#/state/queries/notifications/unread'
 import {useProfilesQuery} from '#/state/queries/profile'
 import {type SessionAccount, useSession, useSessionApi} from '#/state/session'
@@ -63,22 +63,9 @@ import {
   Bookmark_Filled_Corner0_Rounded as BookmarkFilledIcon,
   Bookmark_Stroke2_Corner0_Rounded as BookmarkIcon,
 } from '#/components/icons/Bookmark'
-import {
-  BulletList_Filled_Corner0_Rounded as ListFilledIcon,
-  BulletList_Stroke2_Corner0_Rounded as ListIcon,
-} from '#/components/icons/BulletList'
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as EllipsisIcon} from '#/components/icons/DotGrid'
-import {Earth_Stroke2_Corner0_Rounded as EarthIcon} from '#/components/icons/Earth'
 import {EditBig_Stroke2_Corner2_Rounded as EditBigIcon} from '#/components/icons/EditBig'
-import {
-  Hashtag_Filled_Corner0_Rounded as HashtagFilledIcon,
-  Hashtag_Stroke2_Corner0_Rounded as HashtagIcon,
-} from '#/components/icons/Hashtag'
-import {
-  HomeOpen_Filled_Corner0_Rounded as HomeFilledIcon,
-  HomeOpen_Stroke2_Corner0_Rounded as HomeIcon,
-} from '#/components/icons/Home'
 import {
   MagnifyingGlass_Filled_Stroke2_Corner0_Rounded as MagnifyingGlassFilledIcon,
   MagnifyingGlass_Stroke2_Corner0_Rounded as MagnifyingGlassIcon,
@@ -92,6 +79,10 @@ import {
   Newspaper_Stroke2_Corner2_Rounded as NewspaperIcon,
 } from '#/components/icons/Newspaper'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
+import {
+  Posts_Stroke2_Corner2_Rounded as PostsIcon,
+  Posts_Stroke3_Corner2_Rounded as PostsActiveIcon,
+} from '#/components/icons/Posts'
 import {
   SettingsGear2_Filled_Corner0_Rounded as SettingsFilledIcon,
   SettingsGear2_Stroke2_Corner0_Rounded as SettingsIcon,
@@ -124,14 +115,12 @@ const NAV_ITEM_TO_TAB: Partial<
   Record<Events['nav:click']['item'], SidebarTab>
 > = {
   home: 'Home',
+  news: 'News',
   search: 'Search',
-  chat: 'Messages',
   notifications: 'Notifications',
   profile: 'MyProfile',
-  atmosphere: 'Atmosphere',
-  feeds: 'Feeds',
-  lists: 'Lists',
-  saved: 'Bookmarks',
+  messages: 'Messages',
+  library: 'Library',
   settings: 'Settings',
 }
 
@@ -440,6 +429,8 @@ interface NavItemProps {
   /** Other routes that belong to this item's section, for its active state. */
   relatedRoutes?: string[]
   onNavigateTab?: (tab: SidebarTab) => void
+  /** Items of the smaller second group: Messages, Library and Settings. */
+  secondary?: boolean
 }
 /** Every route of the news hub, so its nav item stays lit across its tabs. */
 const NEWS_HUB_ROUTES = [
@@ -460,6 +451,7 @@ function NavItem({
   navItem,
   relatedRoutes,
   onNavigateTab,
+  secondary = false,
 }: NavItemProps) {
   const t = useTheme()
   const {t: l} = useLingui()
@@ -545,7 +537,11 @@ function NavItem({
           },
           a.z_10,
         ]}>
-        <Icon aria-hidden={true} width={NAV_ICON_WIDTH} style={t.atoms.text} />
+        <Icon
+          aria-hidden={true}
+          width={secondary ? NAV_ICON_WIDTH - 4 : NAV_ICON_WIDTH}
+          style={t.atoms.text}
+        />
         {typeof count === 'string' && count ? (
           <View
             style={[
@@ -601,7 +597,11 @@ function NavItem({
         ) : null}
       </View>
       {!minimal && (
-        <Text style={[a.text_xl, isSelected ? a.font_bold : a.font_normal]}>
+        <Text
+          style={[
+            secondary ? a.text_md : a.text_xl,
+            isSelected ? a.font_bold : a.font_normal,
+          ]}>
           {label}
         </Text>
       )}
@@ -681,6 +681,7 @@ export function DesktopLeftNav({
   routeName: string
   onNavigateTab?: (tab: SidebarTab) => void
 }) {
+  const t = useTheme()
   const {hasSession, currentAccount} = useSession()
   const {i18n, t: l} = useLingui()
   const ax = useAnalytics()
@@ -697,15 +698,7 @@ export function DesktopLeftNav({
     useLayoutBreakpoints()
   const numUnreadNotifications = useUnreadNotifications()
   const numUnreadMessages = useUnreadMessageCount()
-  const isModerationInboxEnabled = ax.features.enabled(
-    ax.features.ModerationInboxEnable,
-  )
-  const moderationInboxUnreadCountQuery = useModerationInboxUnreadCountQuery(
-    isModerationInboxEnabled,
-  )
-  const moderationInboxUnreadCount = isModerationInboxEnabled
-    ? (moderationInboxUnreadCountQuery.data?.unreadCounts.total ?? 0)
-    : 0
+  const moderationInboxUnreadCount = useModerationInboxBadgeCount()
   const numUnreadModerationInbox =
     moderationInboxUnreadCount > 0
       ? moderationInboxUnreadCount >= UNREAD_NOTIFICATION_CAP
@@ -740,21 +733,22 @@ export function DesktopLeftNav({
       {hasSession && (
         <>
           <NavItem
-            label={l`Home`}
+            label={l({message: 'Posts', context: 'main navigation'})}
             href="/"
             navItem="home"
             onNavigateTab={onNavigateTab}
             minimal={leftNavMinimal}
             hasNew={hasHomeBadge && isFollowingV2HomeDotEnabled(ax)}
             icons={{
-              inactive: HomeIcon,
-              active: HomeFilledIcon,
+              inactive: PostsIcon,
+              active: PostsActiveIcon,
             }}
           />
           <NavItem
-            label={l`News`}
+            label={l({message: 'News', context: 'main navigation'})}
             href={NEWS_V2_ENABLED ? '/news/explore' : '/news'}
             navItem="news"
+            onNavigateTab={onNavigateTab}
             relatedRoutes={NEWS_V2_ENABLED ? NEWS_HUB_ROUTES : undefined}
             minimal={leftNavMinimal}
             icons={{
@@ -763,10 +757,11 @@ export function DesktopLeftNav({
             }}
           />
           <NavItem
-            label={l`Explore`}
+            label={l({message: 'Search', context: 'main navigation'})}
             href="/search"
             navItem="search"
             onNavigateTab={onNavigateTab}
+            relatedRoutes={isAtmosphereExploreEnabled ? ['Atmosphere'] : []}
             minimal={leftNavMinimal}
             icons={{
               inactive: MagnifyingGlassIcon,
@@ -774,7 +769,7 @@ export function DesktopLeftNav({
             }}
           />
           <NavItem
-            label={l`Notifications`}
+            label={l({message: 'Notifications', context: 'main navigation'})}
             href="/notifications"
             navItem="notifications"
             onNavigateTab={onNavigateTab}
@@ -782,25 +777,30 @@ export function DesktopLeftNav({
             count={numUnreadNotifications}
             icons={{inactive: BellIcon, active: BellFilledIcon}}
           />
-          {isAtmosphereExploreEnabled && (
-            <NavItem
-              label={l`Atmosphere`}
-              href="/atmosphere"
-              navItem="atmosphere"
-              onNavigateTab={onNavigateTab}
-              minimal={leftNavMinimal}
-              icons={{
-                inactive: EarthIcon,
-                active: EarthIcon,
-              }}
-            />
-          )}
           <NavItem
-            label={l`Chat`}
-            href="/messages"
-            navItem="chat"
+            label={l({message: 'Profile', context: 'main navigation'})}
+            href={makeProfileLink(currentAccount!)}
+            navItem="profile"
             onNavigateTab={onNavigateTab}
             minimal={leftNavMinimal}
+            icons={{inactive: UserCircleIcon, active: UserCircleFilledIcon}}
+          />
+          {/* The Profile bar's items, as a smaller second group. */}
+          <View
+            style={[
+              a.my_sm,
+              a.border_t,
+              t.atoms.border_contrast_low,
+              leftNavMinimal ? {width: 32} : a.mx_md,
+            ]}
+          />
+          <NavItem
+            label={l({message: 'Messages', context: 'main navigation'})}
+            href="/messages"
+            navItem="messages"
+            onNavigateTab={onNavigateTab}
+            minimal={leftNavMinimal}
+            secondary
             count={
               aa.flags.chatDisabled ? undefined : numUnreadMessages.numUnread
             }
@@ -808,43 +808,22 @@ export function DesktopLeftNav({
             icons={{inactive: MessageIcon, active: MessageFilledIcon}}
           />
           <NavItem
-            label={l`Feeds`}
-            href="/feeds"
-            navItem="feeds"
+            label={l({message: 'Library', context: 'main navigation'})}
+            href="/library"
+            navItem="library"
             onNavigateTab={onNavigateTab}
+            relatedRoutes={['Bookmarks', 'Feeds', 'Lists']}
             minimal={leftNavMinimal}
-            icons={{inactive: HashtagIcon, active: HashtagFilledIcon}}
-          />
-          <NavItem
-            label={l`Lists`}
-            href="/lists"
-            navItem="lists"
-            onNavigateTab={onNavigateTab}
-            minimal={leftNavMinimal}
-            icons={{inactive: ListIcon, active: ListFilledIcon}}
-          />
-          <NavItem
-            label={l({message: 'Saved', context: 'link to bookmarks screen'})}
-            href="/saved"
-            navItem="saved"
-            onNavigateTab={onNavigateTab}
-            minimal={leftNavMinimal}
+            secondary
             icons={{inactive: BookmarkIcon, active: BookmarkFilledIcon}}
           />
           <NavItem
-            label={l`Profile`}
-            href={makeProfileLink(currentAccount!)}
-            navItem="profile"
-            onNavigateTab={onNavigateTab}
-            minimal={leftNavMinimal}
-            icons={{inactive: UserCircleIcon, active: UserCircleFilledIcon}}
-          />
-          <NavItem
-            label={l`Settings`}
+            label={l({message: 'Settings', context: 'main navigation'})}
             href="/settings"
             navItem="settings"
             onNavigateTab={onNavigateTab}
             minimal={leftNavMinimal}
+            secondary
             count={numUnreadModerationInbox}
             icons={{inactive: SettingsIcon, active: SettingsFilledIcon}}
           />

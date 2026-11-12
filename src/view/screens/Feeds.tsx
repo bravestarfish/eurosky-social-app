@@ -104,6 +104,14 @@ type FlatlistSlice =
     }
 
 export function FeedsScreen(_props: Props) {
+  return <FeedsView />
+}
+
+/**
+ * Your saved and pinned feeds, plus feeds to discover. `embedded` drops the
+ * screen chrome so the Library can show it as one of its tabs.
+ */
+export function FeedsView({embedded = false}: {embedded?: boolean}) {
   const pal = usePalette('default')
   const t = useTheme()
   const {openComposer} = useOpenComposer()
@@ -495,6 +503,28 @@ export function FeedsScreen(_props: Props) {
     ],
   )
 
+  const list = (
+    <List
+      ref={listRef}
+      data={items}
+      keyExtractor={item => item.key}
+      contentContainerStyle={styles.contentContainer}
+      renderItem={renderItem}
+      refreshing={isPTR}
+      onRefresh={isUserSearching ? undefined : onPullToRefresh}
+      initialNumToRender={10}
+      onEndReached={onEndReached}
+      desktopFixedHeight
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+      sideBorders={false}
+    />
+  )
+
+  if (embedded) {
+    return list
+  }
+
   return (
     <Layout.Screen testID="FeedsScreen">
       <Layout.Center>
@@ -521,21 +551,7 @@ export function FeedsScreen(_props: Props) {
         </Layout.Header.Outer>
       </Layout.Center>
 
-      <List
-        ref={listRef}
-        data={items}
-        keyExtractor={item => item.key}
-        contentContainerStyle={styles.contentContainer}
-        renderItem={renderItem}
-        refreshing={isPTR}
-        onRefresh={isUserSearching ? undefined : onPullToRefresh}
-        initialNumToRender={10}
-        onEndReached={onEndReached}
-        desktopFixedHeight
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        sideBorders={false}
-      />
+      {list}
 
       {hasSession && (
         <FAB

@@ -122,8 +122,7 @@ export function NotificationsScreen({}: Props) {
   return (
     <Layout.Screen testID="notificationsScreen">
       <Layout.Header.Outer noBottomBorder sticky={false}>
-        <Layout.Header.MenuButton />
-        <Layout.Header.Content>
+        <Layout.Header.Content align="left">
           <Layout.Header.TitleText>
             <Trans>Notifications</Trans>
           </Layout.Header.TitleText>

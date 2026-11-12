@@ -80,11 +80,7 @@ export function ProfileSubpageHeader({
   return (
     <>
       <Layout.Header.Outer>
-        {canGoBack ? (
-          <Layout.Header.BackButton />
-        ) : (
-          <Layout.Header.MenuButton />
-        )}
+        {canGoBack ? <Layout.Header.BackButton /> : <Layout.Header.Slot />}
         <Layout.Header.Content />
         {children}
       </Layout.Header.Outer>

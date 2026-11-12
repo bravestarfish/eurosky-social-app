@@ -3,6 +3,7 @@ import {
   getTabState,
   isCurrentProfileRoute,
   isStateAtTabRoot,
+  SECONDARY_TABS,
   TabState,
 } from '#/lib/routes/helpers'
 import {type State} from '#/lib/routes/types'
@@ -18,10 +19,7 @@ describe('native tab navigation state', () => {
     ['MessagesTab', 'Messages'],
     ['NotificationsTab', 'Notifications'],
     ['MyProfileTab', 'MyProfile'],
-    ['AtmosphereTab', 'Atmosphere'],
-    ['FeedsTab', 'Feeds'],
-    ['ListsTab', 'Lists'],
-    ['BookmarksTab', 'Bookmarks'],
+    ['LibraryTab', 'Library'],
     ['SettingsTab', 'Settings'],
   ])('recognizes %s as the %s root', (tabRoute, screen) => {
     const state = asState(buildStateObject(tabRoute, screen, {}))
@@ -62,10 +60,7 @@ describe('native tab navigation state', () => {
     ['MessagesTab', 'Messages'],
     ['NotificationsTab', 'Notifications'],
     ['MyProfileTab', 'MyProfile'],
-    ['AtmosphereTab', 'Atmosphere'],
-    ['FeedsTab', 'Feeds'],
-    ['ListsTab', 'Lists'],
-    ['BookmarksTab', 'Bookmarks'],
+    ['LibraryTab', 'Library'],
     ['SettingsTab', 'Settings'],
   ])(
     'retains %s when a sidebar tab pushes another screen',
@@ -80,13 +75,7 @@ describe('native tab navigation state', () => {
   )
 
   it('builds deep links directly into the matching sidebar tab', () => {
-    for (const screen of [
-      'Atmosphere',
-      'Feeds',
-      'Lists',
-      'Bookmarks',
-      'Settings',
-    ]) {
+    for (const screen of ['Library', 'Settings']) {
       const state = asState(buildStateObject(`${screen}Tab`, screen, {}))
       expect(getTabState(state, screen)).toBe(TabState.InsideAtRoot)
     }
@@ -94,15 +83,15 @@ describe('native tab navigation state', () => {
 
   it('does not confuse a detail screen in one tab with another tab', () => {
     const state = asState(
-      buildStateObject('ListsTab', 'Profile', {name: 'alice.test'}),
+      buildStateObject('LibraryTab', 'Profile', {name: 'alice.test'}),
     )
 
-    expect(getTabState(state, 'Lists')).toBe(TabState.Inside)
+    expect(getTabState(state, 'Library')).toBe(TabState.Inside)
     expect(getTabState(state, 'Settings')).toBe(TabState.Outside)
     expect(getTabState(state, 'MyProfile')).toBe(TabState.Outside)
   })
 
-  it.each(['Atmosphere', 'Feeds', 'Lists', 'Bookmarks', 'Settings'])(
+  it.each(['Library', 'Settings'])(
     'does not treat the legacy %s common screen inside HomeTab as a tab root',
     screen => {
       const state = asState(buildStateObject('HomeTab', screen, {}))
@@ -111,4 +100,17 @@ describe('native tab navigation state', () => {
       expect(getTabState(state, screen)).toBe(TabState.Outside)
     },
   )
+
+  it('treats the News tab root by its root screen, not its tab name', () => {
+    const root = SECONDARY_TABS.News.rootRoute
+    const atRoot = asState(buildStateObject('NewsTab', root, {}))
+    expect(getTabState(atRoot, 'News')).toBe(TabState.InsideAtRoot)
+    expect(isStateAtTabRoot(atRoot)).toBe(true)
+
+    const deeper = asState(
+      buildStateObject('NewsTab', 'Profile', {name: 'alice.test'}),
+    )
+    expect(getTabState(deeper, 'News')).toBe(TabState.Inside)
+    expect(getTabState(deeper, 'Home')).toBe(TabState.Outside)
+  })
 })

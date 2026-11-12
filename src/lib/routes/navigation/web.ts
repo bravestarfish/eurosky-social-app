@@ -7,6 +7,7 @@ import {
 } from '@react-navigation/native'
 import {type NativeStackNavigationProp} from '@react-navigation/native-stack'
 
+import {SECONDARY_TABS} from '#/lib/routes/helpers'
 import {type SidebarTab} from '#/lib/routes/tab-to-nav-item'
 import {
   type CommonNavigationDestination,
@@ -28,19 +29,24 @@ export type NavigationProp<
     keyof ParamList & keyof FlatNavigatorParams,
 > = NativeStackNavigationProp<FlatNavigatorParams, RouteName>
 
-export function getTabNavigationAction(tab: SidebarTab, profileName = 'me') {
+/** Web has no tab stacks, so a tab is the route at its root. */
+function getTabRoute(tab: SidebarTab, profileName: string) {
   if (tab === 'MyProfile') {
-    return CommonActions.navigate('Profile', {name: profileName})
+    return {name: 'Profile', params: {name: profileName}}
   }
-  return CommonActions.navigate(tab)
+  return {name: SECONDARY_TABS[tab]?.rootRoute ?? tab}
+}
+
+export function getTabNavigationAction(tab: SidebarTab, profileName = 'me') {
+  const {name, params} = getTabRoute(tab, profileName)
+  return CommonActions.navigate(name, params)
 }
 
 export function getTabResetAction(tab: SidebarTab, profileName = 'me') {
-  const route =
-    tab === 'MyProfile'
-      ? {name: 'Profile', params: {name: profileName}}
-      : {name: tab}
-  return CommonActions.reset({index: 0, routes: [route]})
+  return CommonActions.reset({
+    index: 0,
+    routes: [getTabRoute(tab, profileName)],
+  })
 }
 
 export function getHomeNavigationAction(

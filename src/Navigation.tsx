@@ -92,6 +92,7 @@ import {CustomFeedLikedByScreen} from '#/screens/CustomFeed/CustomFeedLikedBy'
 import {SharedPreferencesTesterScreen} from '#/screens/E2E/SharedPreferencesTesterScreen'
 import {FindContactsFlowScreen} from '#/screens/FindContactsFlowScreen'
 import HashtagScreen from '#/screens/Hashtag'
+import {LibraryScreen} from '#/screens/Library'
 import {LogScreen} from '#/screens/Log'
 import {MessagesScreen} from '#/screens/Messages/ChatList'
 import {renderMessagesSplitViewLayout} from '#/screens/Messages/components/splitView/MessagesSplitViewLayout'
@@ -724,6 +725,14 @@ function commonScreens(Stack: typeof Flat, unreadCountLabel?: string) {
         }}
       />
       <Stack.Screen
+        name="Library"
+        getComponent={() => LibraryScreen}
+        options={{
+          title: title(msg`Library`),
+          requireAuth: true,
+        }}
+      />
+      <Stack.Screen
         name="FindContactsFlow"
         getComponent={() => FindContactsFlowScreen}
         options={{
@@ -743,7 +752,7 @@ function commonScreens(Stack: typeof Flat, unreadCountLabel?: string) {
 function TabsNavigator({
   layout,
 }: {
-  layout: React.ComponentProps<typeof Tab.Navigator>['layout']
+  layout?: React.ComponentProps<typeof Tab.Navigator>['layout']
 }) {
   const tabBar = useCallback(
     (props: JSX.IntrinsicAttributes & BottomTabBarProps) => (
@@ -760,11 +769,8 @@ function TabsNavigator({
       tabBar={tabBar}
       layout={layout}>
       <Tab.Screen name="HomeTab" getComponent={() => HomeTabNavigator} />
+      <Tab.Screen name="NewsTab" getComponent={() => NewsTabNavigator} />
       <Tab.Screen name="SearchTab" getComponent={() => SearchTabNavigator} />
-      <Tab.Screen
-        name="MessagesTab"
-        getComponent={() => MessagesTabNavigator}
-      />
       <Tab.Screen
         name="NotificationsTab"
         getComponent={() => NotificationsTabNavigator}
@@ -774,15 +780,10 @@ function TabsNavigator({
         getComponent={() => MyProfileTabNavigator}
       />
       <Tab.Screen
-        name="AtmosphereTab"
-        getComponent={() => AtmosphereTabNavigator}
+        name="MessagesTab"
+        getComponent={() => MessagesTabNavigator}
       />
-      <Tab.Screen name="FeedsTab" getComponent={() => FeedsTabNavigator} />
-      <Tab.Screen name="ListsTab" getComponent={() => ListsTabNavigator} />
-      <Tab.Screen
-        name="BookmarksTab"
-        getComponent={() => BookmarksTabNavigator}
-      />
+      <Tab.Screen name="LibraryTab" getComponent={() => LibraryTabNavigator} />
       <Tab.Screen
         name="SettingsTab"
         getComponent={() => SettingsTabNavigator}
@@ -806,20 +807,16 @@ function SecondaryTabNavigator({
   )
 }
 
-function AtmosphereTabNavigator() {
-  return <SecondaryTabNavigator initialRouteName="Atmosphere" />
+function NewsTabNavigator() {
+  return (
+    <SecondaryTabNavigator
+      initialRouteName={NEWS_V2_ENABLED ? 'NewsExplore' : 'NewsFeed'}
+    />
+  )
 }
 
-function FeedsTabNavigator() {
-  return <SecondaryTabNavigator initialRouteName="Feeds" />
-}
-
-function ListsTabNavigator() {
-  return <SecondaryTabNavigator initialRouteName="Lists" />
-}
-
-function BookmarksTabNavigator() {
-  return <SecondaryTabNavigator initialRouteName="Bookmarks" />
+function LibraryTabNavigator() {
+  return <SecondaryTabNavigator initialRouteName="Library" />
 }
 
 function SettingsTabNavigator() {
@@ -1003,7 +1000,7 @@ function MessagesTabNavigator() {
 const FlatNavigator = ({
   layout,
 }: {
-  layout: React.ComponentProps<typeof Flat.Navigator>['layout']
+  layout?: React.ComponentProps<typeof Flat.Navigator>['layout']
 }) => {
   const t = useTheme()
   const numUnread = useUnreadNotifications()

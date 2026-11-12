@@ -3,7 +3,6 @@ import {useCallback} from 'react'
 import {useDialogStateControlContext} from '#/state/dialogs'
 import {useLightboxControls} from '#/components/Lightbox/state'
 import {useComposerControls} from './shell/composer'
-import {useSetDrawerOpen} from './shell/drawer-open'
 
 /**
  * returns true if something was closed
@@ -13,7 +12,6 @@ export function useCloseAnyActiveElement() {
   const {closeLightbox} = useLightboxControls()
   const {closeComposer} = useComposerControls()
   const {closeAllDialogs} = useDialogStateControlContext()
-  const setDrawerOpen = useSetDrawerOpen()
   return useCallback(() => {
     if (closeLightbox()) {
       return true
@@ -24,9 +22,8 @@ export function useCloseAnyActiveElement() {
     if (closeComposer()) {
       return true
     }
-    setDrawerOpen(false)
     return false
-  }, [closeLightbox, closeComposer, setDrawerOpen, closeAllDialogs])
+  }, [closeLightbox, closeComposer, closeAllDialogs])
 }
 
 /**
@@ -36,11 +33,9 @@ export function useCloseAllActiveElements() {
   const {closeLightbox} = useLightboxControls()
   const {closeComposer} = useComposerControls()
   const {closeAllDialogs: closeAlfDialogs} = useDialogStateControlContext()
-  const setDrawerOpen = useSetDrawerOpen()
   return useCallback(() => {
     closeLightbox()
     closeComposer()
     closeAlfDialogs()
-    setDrawerOpen(false)
-  }, [closeLightbox, closeComposer, closeAlfDialogs, setDrawerOpen])
+  }, [closeLightbox, closeComposer, closeAlfDialogs])
 }

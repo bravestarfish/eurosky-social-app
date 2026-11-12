@@ -16,6 +16,7 @@ import {STALE} from '#/state/queries'
 import {createQueryKey} from '#/state/queries/util'
 import {useAppviewClient, useSession} from '#/state/session'
 import * as Toast from '#/components/Toast'
+import {useAnalytics} from '#/analytics'
 import {tools} from '#/lexicons'
 
 const QUERY_KEY_ROOT = 'moderation-inbox'
@@ -348,4 +349,15 @@ export function useUpdateModerationInboxSeenMutation({
       })
     },
   })
+}
+
+/**
+ * Unread moderation inbox items, or 0 when the inbox is not enabled for this
+ * account. Shown as a count on the way into Settings.
+ */
+export function useModerationInboxBadgeCount() {
+  const ax = useAnalytics()
+  const isEnabled = ax.features.enabled(ax.features.ModerationInboxEnable)
+  const query = useModerationInboxUnreadCountQuery(isEnabled)
+  return isEnabled ? (query.data?.unreadCounts.total ?? 0) : 0
 }

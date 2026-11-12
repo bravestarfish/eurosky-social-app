@@ -1,5 +1,5 @@
 import {createContext, useCallback, useContext} from 'react'
-import {type GestureResponderEvent, Keyboard, View} from 'react-native'
+import {type GestureResponderEvent, View} from 'react-native'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import {msg} from '@lingui/core/macro'
 import {useLingui} from '@lingui/react'
@@ -7,7 +7,6 @@ import {useNavigation} from '@react-navigation/native'
 
 import {getHomeNavigationAction} from '#/lib/routes/navigation'
 import {type NavigationProp} from '#/lib/routes/types'
-import {useSetDrawerOpen} from '#/state/shell'
 import {useIsWithinSplitView} from '#/screens/Messages/components/splitView/context'
 import {
   atoms as a,
@@ -21,7 +20,6 @@ import {
 } from '#/alf'
 import {Button, ButtonIcon, type ButtonProps} from '#/components/Button'
 import {ArrowLeft_Stroke2_Corner0_Rounded as ArrowLeft} from '#/components/icons/Arrow'
-import {Menu_Stroke2_Corner0_Rounded as Menu} from '#/components/icons/Menu'
 import {
   BUTTON_VISUAL_ALIGNMENT_OFFSET,
   CENTER_COLUMN_OFFSET,
@@ -31,7 +29,6 @@ import {
 } from '#/components/Layout/const'
 import {ScrollbarOffsetContext} from '#/components/Layout/context'
 import {Text} from '#/components/Typography'
-import {useAnalytics} from '#/analytics'
 import {IS_IOS} from '#/env'
 
 const HEADER_BUTTON_HITSLOP = {top: 30, bottom: 10, left: 30, right: 30}
@@ -157,38 +154,6 @@ export function BackButton({onPress, style, ...props}: Partial<ButtonProps>) {
         ]}
         {...props}>
         <ButtonIcon icon={ArrowLeft} size="lg" />
-      </Button>
-    </Slot>
-  )
-}
-
-export function MenuButton() {
-  const {_} = useLingui()
-  const ax = useAnalytics()
-  const setDrawerOpen = useSetDrawerOpen()
-  const {gtMobile} = useBreakpoints()
-
-  const onPress = useCallback(() => {
-    ax.metric('nav:click', {item: 'menu', surface: 'topBar'})
-    Keyboard.dismiss()
-    setDrawerOpen(true)
-  }, [setDrawerOpen, ax])
-
-  return gtMobile ? null : (
-    <Slot>
-      <Button
-        label={_(msg`Open drawer menu`)}
-        size="small"
-        variant="ghost"
-        color="secondary"
-        shape="square"
-        onPress={onPress}
-        hitSlop={HEADER_BUTTON_HITSLOP}
-        style={[
-          {marginLeft: -BUTTON_VISUAL_ALIGNMENT_OFFSET},
-          a.bg_transparent,
-        ]}>
-        <ButtonIcon icon={Menu} size="lg" />
       </Button>
     </Slot>
   )

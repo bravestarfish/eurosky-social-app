@@ -589,10 +589,9 @@ export function Header({
         </>
       ) : (
         <>
-          <Layout.Header.MenuButton />
           <Layout.Header.Content align="left">
             <Layout.Header.TitleText>
-              <Trans>Chats</Trans>
+              <Trans>Messages</Trans>
             </Layout.Header.TitleText>
           </Layout.Header.Content>
           <InboxRequests count={requestCount} variant="ghost" />

@@ -190,7 +190,7 @@ const MinimalHeader = memo(function MinimalHeader({
         animatedStyle,
       ]}>
       <Header.Outer noBottomBorder>
-        {hideBackButton ? <Header.MenuButton /> : <Header.BackButton />}
+        {!hideBackButton && <Header.BackButton />}
         <Header.Content align="left">
           {moderationOpts ? (
             <ProfileCard.Name

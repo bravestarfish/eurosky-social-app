@@ -1,5 +1,6 @@
 import {type NavigationProp} from '@react-navigation/native'
 
+import {NEWS_V2_ENABLED} from '#/features/newsFeed/config'
 import {type RouteParams, type State} from './types'
 
 export function getRootNavigation<T extends {}>(
@@ -41,12 +42,10 @@ export function isStateAtTabRoot(state: State | undefined) {
   }
   const currentRoute = getCurrentRoute(state)
   const activeTab = state.routes[state.index || 0].name
-  const isSecondaryTabRoot =
-    (activeTab === 'AtmosphereTab' && currentRoute.name === 'Atmosphere') ||
-    (activeTab === 'FeedsTab' && currentRoute.name === 'Feeds') ||
-    (activeTab === 'ListsTab' && currentRoute.name === 'Lists') ||
-    (activeTab === 'BookmarksTab' && currentRoute.name === 'Bookmarks') ||
-    (activeTab === 'SettingsTab' && currentRoute.name === 'Settings')
+  const isSecondaryTabRoot = Object.values(SECONDARY_TABS).some(
+    ({tabRoute, rootRoute}) =>
+      activeTab === tabRoute && currentRoute.name === rootRoute,
+  )
 
   return (
     isTab(currentRoute.name, 'Home') ||
@@ -94,12 +93,20 @@ export enum TabState {
   Outside,
 }
 
-const SECONDARY_TAB_ROUTES: Record<string, string> = {
-  Atmosphere: 'AtmosphereTab',
-  Feeds: 'FeedsTab',
-  Lists: 'ListsTab',
-  Bookmarks: 'BookmarksTab',
-  Settings: 'SettingsTab',
+/**
+ * Tabs whose stack is the shared set of screens, keyed by tab name. The root
+ * screen is the one the tab opens on, which is not always named after the tab.
+ */
+export const SECONDARY_TABS: Record<
+  string,
+  {tabRoute: string; rootRoute: string}
+> = {
+  News: {
+    tabRoute: 'NewsTab',
+    rootRoute: NEWS_V2_ENABLED ? 'NewsExplore' : 'NewsFeed',
+  },
+  Library: {tabRoute: 'LibraryTab', rootRoute: 'Library'},
+  Settings: {tabRoute: 'SettingsTab', rootRoute: 'Settings'},
 }
 
 export function getTabState(state: State | undefined, tab: string): TabState {
@@ -109,12 +116,14 @@ export function getTabState(state: State | undefined, tab: string): TabState {
 
   const currentRoute = getCurrentRoute(state)
   const activeTabRoute = state.routes[state.index || 0].name
-  const secondaryTabRoute = SECONDARY_TAB_ROUTES[tab]
-  if (secondaryTabRoute) {
-    if (activeTabRoute !== secondaryTabRoute) {
+  const secondaryTab = SECONDARY_TABS[tab]
+  if (secondaryTab) {
+    if (activeTabRoute !== secondaryTab.tabRoute) {
       return TabState.Outside
     }
-    return currentRoute.name === tab ? TabState.InsideAtRoot : TabState.Inside
+    return currentRoute.name === secondaryTab.rootRoute
+      ? TabState.InsideAtRoot
+      : TabState.Inside
   }
 
   if (isTab(currentRoute.name, tab)) {

@@ -92,7 +92,7 @@ type ListItem =
       }
     }
 
-function BookmarksInner() {
+export function BookmarksInner() {
   const initialNumToRender = useInitialNumToRender()
   const [isPTRing, setIsPTRing] = useState(false)
   const trackPostView = usePostViewTracking('Bookmarks')

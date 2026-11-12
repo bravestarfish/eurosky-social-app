@@ -1,21 +1,19 @@
 import {useNavigationState} from '@react-navigation/native'
 
-import {getCurrentRoute} from '#/lib/routes/helpers'
+import {getCurrentRoute, SECONDARY_TABS} from '#/lib/routes/helpers'
 
 export function useNavigationTabState() {
   return useNavigationState(state => {
     let currentRoute = state ? getCurrentRoute(state).name : 'Home'
     return {
       isAtHome: currentRoute === 'Home',
+      isAtNews: currentRoute === SECONDARY_TABS.News.rootRoute,
       isAtSearch: currentRoute === 'Search',
-      isAtAtmosphere: currentRoute === 'Atmosphere',
-      isAtFeeds: currentRoute === 'Feeds',
-      isAtLists: currentRoute === 'Lists',
-      isAtBookmarks: currentRoute === 'Bookmarks',
-      isAtSettings: currentRoute === 'Settings',
       isAtNotifications: currentRoute === 'Notifications',
       isAtMyProfile: currentRoute === 'MyProfile',
       isAtMessages: currentRoute === 'Messages',
+      isAtLibrary: currentRoute === 'Library',
+      isAtSettings: currentRoute === 'Settings',
     }
   })
 }

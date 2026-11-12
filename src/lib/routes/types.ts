@@ -29,6 +29,9 @@ export type SearchParams = {
 
 export type ModerationInboxTab = 'reports' | 'account'
 
+/** The three sections of the Library screen. */
+export type LibraryTabName = 'saved' | 'feeds' | 'lists'
+
 export type CommonNavigatorParams = {
   NotFound: undefined
   Atmosphere: undefined
@@ -138,6 +141,7 @@ export type CommonNavigatorParams = {
   StarterPackEdit: {rkey?: string}
   VideoFeed: VideoFeedSourceContext
   Bookmarks: undefined
+  Library: {tab?: LibraryTabName}
   FindContactsFlow: undefined
 }
 
@@ -148,10 +152,8 @@ export type BottomTabNavigatorParams = {
     NavigatorScreenParams<NotificationsTabNavigatorParams> | undefined
   MyProfileTab: NavigatorScreenParams<MyProfileTabNavigatorParams> | undefined
   MessagesTab: NavigatorScreenParams<MessagesTabNavigatorParams> | undefined
-  AtmosphereTab: NavigatorScreenParams<CommonNavigatorParams> | undefined
-  FeedsTab: NavigatorScreenParams<CommonNavigatorParams> | undefined
-  ListsTab: NavigatorScreenParams<CommonNavigatorParams> | undefined
-  BookmarksTab: NavigatorScreenParams<CommonNavigatorParams> | undefined
+  NewsTab: NavigatorScreenParams<CommonNavigatorParams> | undefined
+  LibraryTab: NavigatorScreenParams<CommonNavigatorParams> | undefined
   SettingsTab: NavigatorScreenParams<CommonNavigatorParams> | undefined
 }
 

@@ -62,9 +62,7 @@ export function HomeHeaderLayoutMobile({
       ]}
       onLayout={onLayout}>
       <Layout.Header.Outer noBottomBorder>
-        <Layout.Header.Slot>
-          <Layout.Header.MenuButton />
-        </Layout.Header.Slot>
+        <Layout.Header.Slot />
 
         <View style={[a.flex_1, a.align_center]}>
           <PressableScale

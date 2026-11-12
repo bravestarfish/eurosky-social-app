@@ -171,8 +171,10 @@ export type Events = {
       | 'news'
       | 'saved'
       | 'settings'
-      | 'menu'
-    surface: 'bottomBar' | 'drawer' | 'drawerHeader' | 'topBar' | 'leftNav'
+      | 'messages'
+      | 'library'
+      | 'switchAccount'
+    surface: 'bottomBar' | 'profileBar' | 'topBar' | 'leftNav'
   }
   'deepLink:referrerReceived': {
     to: string

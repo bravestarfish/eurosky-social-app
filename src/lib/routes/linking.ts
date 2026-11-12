@@ -3,7 +3,11 @@ import {
   type LinkingOptions,
 } from '@react-navigation/native'
 
-import {buildStateObject, getCurrentRoute} from '#/lib/routes/helpers'
+import {
+  buildStateObject,
+  getCurrentRoute,
+  SECONDARY_TABS,
+} from '#/lib/routes/helpers'
 import {
   type RootNavigatorParams,
   type RouteParams,
@@ -86,14 +90,27 @@ export const LINKING = {
       if (name === 'Messages') {
         return buildStateObject('MessagesTab', 'Messages', params)
       }
-      if (
-        name === 'Atmosphere' ||
-        name === 'Feeds' ||
-        name === 'Lists' ||
-        name === 'Bookmarks' ||
-        name === 'Settings'
-      ) {
-        return buildStateObject(`${name}Tab`, name, params)
+      if (name === 'Settings') {
+        return buildStateObject('SettingsTab', 'Settings', params)
+      }
+      if (name === 'Library') {
+        return buildStateObject('LibraryTab', 'Library', params)
+      }
+      const newsRoot = SECONDARY_TABS.News.rootRoute
+      if (name === newsRoot) {
+        return buildStateObject('NewsTab', newsRoot, params)
+      }
+      // Saved, Feeds and Lists live in the Library, so back returns to it.
+      if (name === 'Bookmarks' || name === 'Feeds' || name === 'Lists') {
+        return buildStateObject('LibraryTab', name, params, [
+          {name: 'Library', params: {}},
+        ])
+      }
+      // Atmosphere is reached from Search.
+      if (name === 'Atmosphere') {
+        return buildStateObject('SearchTab', name, params, [
+          {name: 'Search', params: {}},
+        ])
       }
       // if the path is something else, like a post, profile, or even settings, we need to initialize the home tab as pre-existing state otherwise the back button will not work
       return buildStateObject('HomeTab', name, params, [

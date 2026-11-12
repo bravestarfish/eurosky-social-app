@@ -105,14 +105,12 @@ export function SearchScreenShell({
   fixedParams,
   navButton = 'menu',
   inputPlaceholder,
-  isExplore,
 }: {
   queryParam: string
   testID: string
   fixedParams?: SearchFilters
   navButton?: 'back' | 'menu'
   inputPlaceholder?: string
-  isExplore?: boolean
 }) {
   const ax = useAnalytics()
   const t = useTheme()
@@ -554,14 +552,10 @@ export function SearchScreenShell({
               // if we add it only when the header is hidden
               style={{marginBottom: tokens.space.xs * -1}}>
               <Layout.Header.Outer noBottomBorder>
-                {navButton === 'menu' ? (
-                  <Layout.Header.MenuButton />
-                ) : (
-                  <Layout.Header.BackButton />
-                )}
+                {navButton === 'back' && <Layout.Header.BackButton />}
                 <Layout.Header.Content align="left">
                   <Layout.Header.TitleText>
-                    {isExplore ? <Trans>Explore</Trans> : <Trans>Search</Trans>}
+                    <Trans>Search</Trans>
                   </Layout.Header.TitleText>
                 </Layout.Header.Content>
                 {showFilters ? (
@@ -624,7 +618,9 @@ export function SearchScreenShell({
                       onChangeText={onChangeText}
                       onClearText={onPressClearQuery}
                       onSubmitEditing={onSubmit('typed')}
-                      placeholder={inputPlaceholder ?? l`Search`}
+                      placeholder={
+                        inputPlaceholder ?? l`People, posts, feeds and apps`
+                      }
                       hitSlop={{...HITSLOP_20, top: 0}}
                       hotkey={true}
                       fixedParams={Boolean(fixedParams)}

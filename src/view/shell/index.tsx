@@ -1,31 +1,24 @@
-import {useCallback, useEffect} from 'react'
-import {BackHandler, useWindowDimensions, View} from 'react-native'
-import {Drawer} from 'react-native-drawer-layout'
+import {useEffect} from 'react'
+import {BackHandler, View} from 'react-native'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import {NavigationBar} from 'expo-navigation-bar'
 import {StatusBar} from 'expo-status-bar'
 import {BottomSheetOutlet} from '@bsky.app/bottom-sheet'
 import {updateActiveViewAsync} from '@bsky.app/expo-bluesky-swiss-army/src/VisibilityView'
-import {useNavigation, useNavigationState} from '@react-navigation/native'
+import {useNavigation} from '@react-navigation/native'
 
 import {useDedupe} from '#/lib/hooks/useDedupe'
 import {useIntentHandler} from '#/lib/hooks/useIntentHandler'
 import {useNotificationsHandler} from '#/lib/hooks/useNotificationHandler'
 import {useOTAUpdateRecovery} from '#/lib/hooks/useOTAUpdates'
 import {useNotificationsRegistration} from '#/lib/notifications/notifications'
-import {isStateAtTabRoot} from '#/lib/routes/helpers'
 import {useDialogFullyExpandedCountContext} from '#/state/dialogs'
 import {useSession} from '#/state/session'
-import {
-  useIsDrawerOpen,
-  useIsDrawerSwipeDisabled,
-  useSetDrawerOpen,
-} from '#/state/shell'
 import {useCloseAnyActiveElement} from '#/state/util'
 import {ErrorBoundary} from '#/view/com/util/ErrorBoundary'
 import {Deactivated} from '#/screens/Deactivated'
 import {Takendown} from '#/screens/Takendown'
-import {atoms as a, select, useBreakpoints, useTheme} from '#/alf'
+import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {setSystemUITheme} from '#/alf/util/systemUI'
 import {AgeAssuranceRedirectDialog} from '#/components/ageAssurance/AgeAssuranceRedirectDialog'
 import {EmailDialog} from '#/components/dialogs/EmailDialog'
@@ -50,7 +43,6 @@ import {IS_ANDROID, IS_IOS, IS_LIQUID_GLASS} from '#/env'
 import {PetCompanion} from '#/features/petCompanion'
 import {RoutesContainer, TabsNavigator} from '#/Navigation'
 import {Composer} from './Composer'
-import {DrawerContent} from './Drawer'
 
 function ShellInner() {
   const insets = useSafeAreaInsets()
@@ -94,19 +86,12 @@ function ShellInner() {
     }
   }, [dedupe, navigation])
 
-  const drawerLayout = useCallback(
-    ({children}: {children: React.ReactNode}) => (
-      <DrawerLayout>{children}</DrawerLayout>
-    ),
-    [],
-  )
-
   return (
     <>
       <View style={[a.h_full]}>
         <ErrorBoundary
           style={{paddingTop: insets.top, paddingBottom: insets.bottom}}>
-          <TabsNavigator layout={drawerLayout} />
+          <TabsNavigator />
         </ErrorBoundary>
       </View>
       <PetCompanion />
@@ -131,101 +116,6 @@ function ShellInner() {
 
       <PolicyUpdateOverlayPortalOutlet />
     </>
-  )
-}
-
-function DrawerLayout({children}: {children: React.ReactNode}) {
-  const t = useTheme()
-  const isDrawerOpen = useIsDrawerOpen()
-  const setIsDrawerOpen = useSetDrawerOpen()
-  const isDrawerSwipeDisabled = useIsDrawerSwipeDisabled()
-  const winDim = useWindowDimensions()
-  const {gtMobile} = useBreakpoints()
-  const hasTabletSidebar = gtMobile
-
-  const canGoBack = useNavigationState(state => !isStateAtTabRoot(state))
-  const {hasSession} = useSession()
-
-  const swipeEnabled =
-    !hasTabletSidebar && !canGoBack && hasSession && !isDrawerSwipeDisabled
-
-  useEffect(() => {
-    if (hasTabletSidebar && isDrawerOpen) {
-      setIsDrawerOpen(false)
-    }
-  }, [hasTabletSidebar, isDrawerOpen, setIsDrawerOpen])
-
-  const renderDrawerContent = useCallback(() => <DrawerContent />, [])
-  const onOpenDrawer = useCallback(
-    () => setIsDrawerOpen(true),
-    [setIsDrawerOpen],
-  )
-  const onCloseDrawer = useCallback(
-    () => setIsDrawerOpen(false),
-    [setIsDrawerOpen],
-  )
-
-  return (
-    <Drawer
-      renderDrawerContent={renderDrawerContent}
-      drawerStyle={{width: Math.min(400, winDim.width * 0.8)}}
-      configureGestureHandler={handler => {
-        if (swipeEnabled) {
-          if (isDrawerOpen) {
-            return {...handler, activeOffsetX: [-1, 1]}
-          } else {
-            return {
-              ...handler,
-              /*
-               * Any movement to the left is a pager swipe, so fail the drawer
-               * gesture immediately.
-               */
-              failOffsetX: -1,
-              /*
-               * Don't rush declaring that a movement to the right is a drawer
-               * swipe. It could be a vertical scroll, or a slow horizontal
-               * carousel swipe. On Android a child's `block` relation only
-               * holds the drawer off once the native scroll has activated,
-               * which on a slow swipe doesn't happen until movement crosses
-               * the native touch slop (~8-16px). Activating the drawer below
-               * that lets a slow carousel swipe pop the drawer open (APP-2119),
-               * so require more travel before claiming on Android.
-               */
-              activeOffsetX: IS_ANDROID ? 20 : 5,
-            }
-          }
-        } else {
-          /*
-           * Fail the gesture immediately and skip the edge peek on touch-down.
-           * This seems more reliable than the `swipeEnabled` prop alone, which
-           * may freeze after toggling off/on.
-           */
-          return {
-            ...handler,
-            onBegin: undefined,
-            failOffsetX: [0, 0],
-            failOffsetY: [0, 0],
-          }
-        }
-      }}
-      open={isDrawerOpen && !hasTabletSidebar}
-      onOpen={onOpenDrawer}
-      onClose={onCloseDrawer}
-      swipeEdgeWidth={winDim.width}
-      swipeMinVelocity={100}
-      swipeMinDistance={10}
-      drawerType={IS_IOS ? 'slide' : 'front'}
-      overlayStyle={{
-        backgroundColor: select(t.name, {
-          light: 'rgba(0, 57, 117, 0.1)',
-          dark: IS_ANDROID
-            ? 'rgba(16, 133, 254, 0.1)'
-            : 'rgba(1, 82, 168, 0.1)',
-          dim: 'rgba(10, 13, 16, 0.8)',
-        }),
-      }}>
-      {children}
-    </Drawer>
   )
 }
 
