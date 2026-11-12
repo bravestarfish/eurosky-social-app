@@ -133,19 +133,20 @@ import {ContentAndMediaSettingsScreen} from '#/screens/Settings/ContentAndMediaS
 import {DecorationsSettingsScreen} from '#/screens/Settings/DecorationsSettings'
 import {ExternalMediaPreferencesScreen} from '#/screens/Settings/ExternalMediaPreferences'
 import {FindContactsSettingsScreen} from '#/screens/Settings/FindContactsSettings'
-import {FollowingFeedPreferencesScreen} from '#/screens/Settings/FollowingFeedPreferences'
 import {InterestsSettingsScreen} from '#/screens/Settings/InterestsSettings'
 import {LanguageSettingsScreen} from '#/screens/Settings/LanguageSettings'
 import {LegacyNotificationSettingsScreen} from '#/screens/Settings/LegacyNotificationSettings'
-import {NetworkServicesSettingsScreen} from '#/screens/Settings/NetworkServicesSettings'
 import {AppViewTransferSettingsScreen} from '#/screens/Settings/NetworkServicesSettings/AppViewTransfer'
 import {ContentServiceSettingsScreen} from '#/screens/Settings/NetworkServicesSettings/ContentServiceSettings'
 import {NotificationSettingsScreen} from '#/screens/Settings/NotificationSettings'
 import {ActivityNotificationSettingsScreen} from '#/screens/Settings/NotificationSettings/ActivityNotificationSettings'
 import {PetCompanionSettingsScreen} from '#/screens/Settings/PetCompanionSettings'
 import {PrivacyAndSecuritySettingsScreen} from '#/screens/Settings/PrivacyAndSecuritySettings'
+import {
+  AccountSettingsRedirect,
+  FeedsAndContentRedirect,
+} from '#/screens/Settings/redirects'
 import {SettingsScreen} from '#/screens/Settings/Settings'
-import {ThreadPreferencesScreen} from '#/screens/Settings/ThreadPreferences'
 import {
   StarterPackScreen,
   StarterPackScreenShort,
@@ -474,16 +475,13 @@ function commonScreens(Stack: typeof Flat, unreadCountLabel?: string) {
       />
       <Stack.Screen
         name="PreferencesFollowingFeed"
-        getComponent={() => FollowingFeedPreferencesScreen}
-        options={{
-          title: title(msg`Following Feed Preferences`),
-          requireAuth: true,
-        }}
+        getComponent={() => FeedsAndContentRedirect}
+        options={{title: title(msg`Feeds and content`), requireAuth: true}}
       />
       <Stack.Screen
         name="PreferencesThreads"
-        getComponent={() => ThreadPreferencesScreen}
-        options={{title: title(msg`Threads Preferences`), requireAuth: true}}
+        getComponent={() => FeedsAndContentRedirect}
+        options={{title: title(msg`Feeds and content`), requireAuth: true}}
       />
       <Stack.Screen
         name="PreferencesExternalEmbeds"
@@ -505,13 +503,13 @@ function commonScreens(Stack: typeof Flat, unreadCountLabel?: string) {
         name="AppearanceSettings"
         getComponent={() => AppearanceSettingsScreen}
         options={{
-          title: title(msg`Appearance`),
+          title: title(msg`Look and feel`),
           requireAuth: true,
         }}
       />
       <Stack.Screen
         name="NetworkServicesSettings"
-        getComponent={() => NetworkServicesSettingsScreen}
+        getComponent={() => AccountSettingsRedirect}
         options={{
           title: title(msg`Network services`),
           requireAuth: true,
@@ -571,7 +569,7 @@ function commonScreens(Stack: typeof Flat, unreadCountLabel?: string) {
         name="PrivacyAndSecuritySettings"
         getComponent={() => PrivacyAndSecuritySettingsScreen}
         options={{
-          title: title(msg`Privacy and Security`),
+          title: title(msg`Privacy and safety`),
           requireAuth: true,
         }}
       />
@@ -579,7 +577,7 @@ function commonScreens(Stack: typeof Flat, unreadCountLabel?: string) {
         name="ActivityPrivacySettings"
         getComponent={() => ActivityPrivacySettingsScreen}
         options={{
-          title: title(msg`Privacy and Security`),
+          title: title(msg`Privacy and safety`),
           requireAuth: true,
         }}
       />
@@ -608,7 +606,7 @@ function commonScreens(Stack: typeof Flat, unreadCountLabel?: string) {
         name="ContentAndMediaSettings"
         getComponent={() => ContentAndMediaSettingsScreen}
         options={{
-          title: title(msg`Content and Media`),
+          title: title(msg`Feeds and content`),
           requireAuth: true,
         }}
       />
@@ -624,7 +622,7 @@ function commonScreens(Stack: typeof Flat, unreadCountLabel?: string) {
         name="AboutSettings"
         getComponent={() => AboutSettingsScreen}
         options={{
-          title: title(msg`About`),
+          title: title(msg`Help and about`),
           requireAuth: true,
         }}
       />

@@ -251,7 +251,11 @@ function ProfileScreenLoaded({
   // Reply deep links must work without a session so crawlers can index reply-heavy profiles.
   const showRepliesTab = hasSession || tab === 'replies'
   const showMediaTab = !hasLabeler
-  const showVideosTab = !hasLabeler
+  /*
+   * mu has no separate Videos tab: videos play inline and are in Media. Old
+   * links to the videos tab open Media instead.
+   */
+  const showVideosTab = false
   const showLikesTab = isMe
   const feedGenCount = profile.associated?.feedgens || 0
   const showFeedsTab = isMe || feedGenCount > 0
@@ -323,7 +327,7 @@ function ProfileScreenLoaded({
       posts: postsIndex,
       replies: repliesIndex,
       media: mediaIndex,
-      videos: videosIndex,
+      videos: videosIndex ?? mediaIndex,
       feeds: feedsIndex,
       'starter-packs': starterPacksIndex,
       lists: listsIndex,

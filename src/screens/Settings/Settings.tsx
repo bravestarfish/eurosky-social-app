@@ -1,17 +1,22 @@
 import {useState} from 'react'
-import {Alert, LayoutAnimation, Linking, Pressable, View} from 'react-native'
+import {
+  Alert,
+  type GestureResponderEvent,
+  LayoutAnimation,
+  View,
+} from 'react-native'
 import {useReducedMotion} from 'react-native-reanimated'
 import {removeNuxs} from '@bsky/sdk'
 import {moderateProfile} from '@bsky/sdk/moderation'
-import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {type NativeStackScreenProps} from '@react-navigation/native-stack'
 
-import {HELP_DESK_URL, HITSLOP_10} from '#/lib/constants'
-import {useAccountSwitcher} from '#/lib/hooks/useAccountSwitcher'
 import {useApplyPullRequestOTAUpdate} from '#/lib/hooks/useOTAUpdates'
-import {getHomeNavigationAction} from '#/lib/routes/navigation'
+import {
+  getHomeNavigationAction,
+  getTabNavigationAction,
+} from '#/lib/routes/navigation'
 import {
   type CommonNavigatorParams,
   type NavigationProp,
@@ -23,97 +28,51 @@ import * as persisted from '#/state/persisted'
 import {clearStorage} from '#/state/persisted'
 import {useModerationOpts} from '#/state/preferences/moderation-opts'
 import {useDeleteActorDeclaration} from '#/state/queries/messages/actor-declaration'
-import {useModerationInboxUnreadCountQuery} from '#/state/queries/moderation-inbox'
-import {useProfileQuery, useProfilesQuery} from '#/state/queries/profile'
-import {
-  type SessionAccount,
-  usePdsClient,
-  useSession,
-  useSessionApi,
-} from '#/state/session'
+import {useModerationInboxBadgeCount} from '#/state/queries/moderation-inbox'
+import {useProfileQuery} from '#/state/queries/profile'
+import {usePdsClient, useSession, useSessionApi} from '#/state/session'
 import {useOnboardingDispatch} from '#/state/shell'
-import {useLoggedOutViewControls} from '#/state/shell/logged-out'
-import {useCloseAllActiveElements} from '#/state/util'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
-import {atoms as a, tokens, useBreakpoints, useTheme} from '#/alf'
+import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {AgeAssuranceDismissibleNotice} from '#/components/ageAssurance/AgeAssuranceDismissibleNotice'
-import {AvatarStackWithFetch} from '#/components/AvatarStack'
 import {Button, ButtonText} from '#/components/Button'
-import {useIsFindContactsFeatureEnabledBasedOnGeolocation} from '#/components/contacts/country-allowlist'
-import {useDialogControl} from '#/components/Dialog'
-import {SwitchAccountDialog} from '#/components/dialogs/SwitchAccount'
-import {Accessibility_Stroke2_Corner2_Rounded as AccessibilityIcon} from '#/components/icons/Accessibility'
 import {Bell_Stroke2_Corner0_Rounded as NotificationIcon} from '#/components/icons/Bell'
-import {BubbleInfo_Stroke2_Corner2_Rounded as BubbleInfoIcon} from '#/components/icons/BubbleInfo'
-import {ChevronTop_Stroke2_Corner0_Rounded as ChevronUpIcon} from '#/components/icons/Chevron'
 import {CircleQuestion_Stroke2_Corner2_Rounded as CircleQuestionIcon} from '#/components/icons/CircleQuestion'
 import {CodeBrackets_Stroke2_Corner2_Rounded as CodeBracketsIcon} from '#/components/icons/CodeBrackets'
-import {Contacts_Stroke2_Corner2_Rounded as ContactsIcon} from '#/components/icons/Contacts'
-import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsHorizontal} from '#/components/icons/DotGrid'
-import {Earth_Stroke2_Corner2_Rounded as EarthIcon} from '#/components/icons/Globe'
-import {Heart2_Stroke2_Corner0_Rounded as HeartIcon} from '#/components/icons/Heart2'
-import {Lock_Stroke2_Corner2_Rounded as LockIcon} from '#/components/icons/Lock'
+import {type Props as SVGIconProps} from '#/components/icons/common'
 import {PaintRoller_Stroke2_Corner2_Rounded as PaintRollerIcon} from '#/components/icons/PaintRoller'
-import {
-  Person_Stroke2_Corner2_Rounded as PersonIcon,
-  PersonGroup_Stroke2_Corner2_Rounded as PersonGroupIcon,
-  PersonPlus_Stroke2_Corner2_Rounded as PersonPlusIcon,
-  PersonX_Stroke2_Corner0_Rounded as PersonXIcon,
-} from '#/components/icons/Person'
-import {RaisingHand4Finger_Stroke2_Corner2_Rounded as HandIcon} from '#/components/icons/RaisingHand'
-import {Sparkle_Stroke2_Corner0_Rounded as SparkleIcon} from '#/components/icons/Sparkle'
-import {Window_Stroke2_Corner2_Rounded as WindowIcon} from '#/components/icons/Window'
+import {Person_Stroke2_Corner2_Rounded as PersonIcon} from '#/components/icons/Person'
+import {Posts_Stroke2_Corner2_Rounded as PostsIcon} from '#/components/icons/Posts'
+import {ShieldCheck_Stroke2_Corner0_Rounded as ShieldIcon} from '#/components/icons/Shield'
 import * as Layout from '#/components/Layout'
-import {Loader} from '#/components/Loader'
-import * as Menu from '#/components/Menu'
 import {ID as PolicyUpdate202508} from '#/components/PolicyUpdateOverlay/updates/202508/config'
 import {ProfileBadges} from '#/components/ProfileBadges'
 import * as Prompt from '#/components/Prompt'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
-import {useAnalytics} from '#/analytics'
-import {BRAND} from '#/config/brand'
 import {IS_INTERNAL, IS_IOS, IS_NATIVE} from '#/env'
 import {useActorStatus} from '#/features/liveNow'
 import {type app} from '#/lexicons'
 import {device, useStorage} from '#/storage'
 import {useActivitySubscriptionsNudged} from '#/storage/hooks/activity-subscriptions-nudged'
+import {ItemTextWithSubtitle} from './NotificationSettings/components/ItemTextWithSubtitle'
 
 type Props = NativeStackScreenProps<CommonNavigatorParams, 'Settings'>
 export function SettingsScreen({}: Props) {
-  const ax = useAnalytics()
   const {t: l} = useLingui()
-  const isModerationInboxEnabled = ax.features.enabled(
-    ax.features.ModerationInboxEnable,
-  )
-  const unreadCountQuery = useModerationInboxUnreadCountQuery(
-    isModerationInboxEnabled,
-  )
-  const unreadCount = isModerationInboxEnabled
-    ? (unreadCountQuery.data?.unreadCounts.total ?? 0)
-    : 0
+  const unreadCount = useModerationInboxBadgeCount()
   const reducedMotion = useReducedMotion()
   const {logoutEveryAccount} = useSessionApi()
-  const {accounts, currentAccount} = useSession()
-  const switchAccountControl = useDialogControl()
+  const {currentAccount} = useSession()
   const signOutPromptControl = Prompt.usePromptControl()
   const {data: profile} = useProfileQuery({did: currentAccount?.did})
-  const {data: otherProfiles} = useProfilesQuery({
-    handles: accounts
-      .filter(acc => acc.did !== currentAccount?.did)
-      .map(acc => acc.handle),
-  })
-  const {pendingDid, onPressSwitchAccount} = useAccountSwitcher()
-  const [showAccounts, setShowAccounts] = useState(false)
   const [showDevOptions, setShowDevOptions] = useState(false)
-  const findContactsEnabled =
-    useIsFindContactsFeatureEnabledBasedOnGeolocation()
 
   return (
     <Layout.Screen>
       <Layout.Header.Outer>
-        <Layout.Header.BackButton />
+        <BackToProfileButton />
         <Layout.Header.Content>
           <Layout.Header.TitleText>
             <Trans>Settings</Trans>
@@ -137,183 +96,44 @@ export function SettingsScreen({}: Props) {
             ]}>
             {profile && <ProfilePreview profile={profile} />}
           </View>
-          {accounts.length > 1 ? (
-            <>
-              <SettingsList.PressableItem
-                label={l`Switch account`}
-                accessibilityHint={l`Shows other accounts you can switch to`}
-                onPress={() => {
-                  if (!reducedMotion) {
-                    LayoutAnimation.configureNext(
-                      LayoutAnimation.Presets.easeInEaseOut,
-                    )
-                  }
-                  setShowAccounts(s => !s)
-                }}>
-                <SettingsList.ItemIcon icon={PersonGroupIcon} />
-                <SettingsList.ItemText>
-                  <Trans>Switch account</Trans>
-                </SettingsList.ItemText>
-                {showAccounts ? (
-                  <SettingsList.ItemIcon icon={ChevronUpIcon} size="md" />
-                ) : (
-                  <AvatarStackWithFetch
-                    profiles={accounts
-                      .map(acc => acc.did)
-                      .filter(did => did !== currentAccount?.did)
-                      .slice(0, 5)}
-                  />
-                )}
-              </SettingsList.PressableItem>
-              {showAccounts && (
-                <>
-                  <SettingsList.Divider />
-                  {accounts
-                    .filter(acc => acc.did !== currentAccount?.did)
-                    .map(account => (
-                      <AccountRow
-                        key={account.did}
-                        account={account}
-                        profile={otherProfiles?.profiles?.find(
-                          p => p.did === account.did,
-                        )}
-                        pendingDid={pendingDid}
-                        onPressSwitchAccount={(account, logContext) =>
-                          void onPressSwitchAccount(account, logContext)
-                        }
-                      />
-                    ))}
-                  <AddAccountRow />
-                </>
-              )}
-            </>
-          ) : (
-            <AddAccountRow />
-          )}
           <SettingsList.Divider />
-          <SettingsList.LinkItem to="/settings/account" label={l`Account`}>
-            <SettingsList.ItemIcon icon={PersonIcon} />
-            <SettingsList.ItemText>
-              <Trans>Account</Trans>
-            </SettingsList.ItemText>
-          </SettingsList.LinkItem>
-          <SettingsList.LinkItem
-            to="/settings/privacy-and-security"
-            label={l`Privacy and security`}>
-            <SettingsList.ItemIcon icon={LockIcon} />
-            <SettingsList.ItemText>
-              <Trans>Privacy and security</Trans>
-            </SettingsList.ItemText>
-          </SettingsList.LinkItem>
-          <SettingsList.LinkItem
-            to="/moderation"
-            label={l`Moderation tools`}
-            accessibilityHint={
-              unreadCount > 0
-                ? plural(unreadCount, {
-                    one: '# unread update',
-                    other: '# unread updates',
-                  })
-                : undefined
-            }>
-            <SettingsList.ItemIcon icon={HandIcon} />
-            <SettingsList.ItemText>
-              <Trans>Moderation tools</Trans>
-            </SettingsList.ItemText>
-            <SettingsList.BadgeCount count={unreadCount} />
-          </SettingsList.LinkItem>
-          <SettingsList.LinkItem
+          <SectionLink
+            to="/settings/account"
+            icon={PersonIcon}
+            title={l`Account`}
+            summary={l`Email, password, handle, 2FA, export, delete`}
+          />
+          <SectionLink
+            to="/settings/privacy-and-safety"
+            icon={ShieldIcon}
+            title={l`Privacy and safety`}
+            summary={l`Muted words, blocks, content filters`}
+            count={unreadCount}
+          />
+          <SectionLink
             to="/settings/notifications"
-            label={l`Notifications`}>
-            <SettingsList.ItemIcon icon={NotificationIcon} />
-            <SettingsList.ItemText>
-              <Trans>Notifications</Trans>
-            </SettingsList.ItemText>
-          </SettingsList.LinkItem>
-          <SettingsList.LinkItem
+            icon={NotificationIcon}
+            title={l`Notifications`}
+            summary={l`Push, comments, quotes, messages`}
+          />
+          <SectionLink
             to="/settings/content-and-media"
-            label={l`Content and media`}>
-            <SettingsList.ItemIcon icon={WindowIcon} />
-            <SettingsList.ItemText>
-              <Trans>Content and media</Trans>
-            </SettingsList.ItemText>
-          </SettingsList.LinkItem>
-          <SettingsList.LinkItem
-            to="/settings/network-services"
-            label={l`Network services`}>
-            <SettingsList.ItemIcon icon={EarthIcon} />
-            <SettingsList.ItemText>
-              <Trans>Network services</Trans>
-            </SettingsList.ItemText>
-          </SettingsList.LinkItem>
-          {IS_NATIVE &&
-            findContactsEnabled &&
-            !ax.features.enabled(ax.features.ImportContactsSettingsDisable) && (
-              <SettingsList.LinkItem
-                to="/settings/find-contacts"
-                label={l`Find and invite friends`}>
-                <SettingsList.ItemIcon icon={ContactsIcon} />
-                <SettingsList.ItemText>
-                  <Trans>Find and invite friends</Trans>
-                </SettingsList.ItemText>
-              </SettingsList.LinkItem>
-            )}
-          <SettingsList.LinkItem
+            icon={PostsIcon}
+            title={l`Feeds and content`}
+            summary={l`Posts, news, media, languages`}
+          />
+          <SectionLink
             to="/settings/appearance"
-            label={l`Appearance`}>
-            <SettingsList.ItemIcon icon={PaintRollerIcon} />
-            <SettingsList.ItemText>
-              <Trans>Appearance</Trans>
-            </SettingsList.ItemText>
-          </SettingsList.LinkItem>
-          <SettingsList.LinkItem
-            to="/settings/pet-companion"
-            label={l`Companion`}>
-            <SettingsList.ItemIcon icon={HeartIcon} />
-            <SettingsList.ItemText>
-              <Trans>Companion</Trans>
-            </SettingsList.ItemText>
-          </SettingsList.LinkItem>
-          {BRAND.decorations.enabled && (
-            <SettingsList.LinkItem
-              to="/settings/decorations"
-              label={l`Profile decorations`}>
-              <SettingsList.ItemIcon icon={SparkleIcon} />
-              <SettingsList.ItemText>
-                <Trans>Profile decorations</Trans>
-              </SettingsList.ItemText>
-            </SettingsList.LinkItem>
-          )}
-          <SettingsList.LinkItem
-            to="/settings/accessibility"
-            label={l`Accessibility`}>
-            <SettingsList.ItemIcon icon={AccessibilityIcon} />
-            <SettingsList.ItemText>
-              <Trans>Accessibility</Trans>
-            </SettingsList.ItemText>
-          </SettingsList.LinkItem>
-          <SettingsList.LinkItem to="/settings/language" label={l`Languages`}>
-            <SettingsList.ItemIcon icon={EarthIcon} />
-            <SettingsList.ItemText>
-              <Trans>Languages</Trans>
-            </SettingsList.ItemText>
-          </SettingsList.LinkItem>
-          <SettingsList.PressableItem
-            onPress={() => void Linking.openURL(HELP_DESK_URL)}
-            label={l`Help`}
-            accessibilityHint={l`Opens helpdesk in browser`}>
-            <SettingsList.ItemIcon icon={CircleQuestionIcon} />
-            <SettingsList.ItemText>
-              <Trans>Help</Trans>
-            </SettingsList.ItemText>
-            <SettingsList.Chevron />
-          </SettingsList.PressableItem>
-          <SettingsList.LinkItem to="/settings/about" label={l`About`}>
-            <SettingsList.ItemIcon icon={BubbleInfoIcon} />
-            <SettingsList.ItemText>
-              <Trans>About</Trans>
-            </SettingsList.ItemText>
-          </SettingsList.LinkItem>
+            icon={PaintRollerIcon}
+            title={l`Look and feel`}
+            summary={l`Theme, accessibility, companion`}
+          />
+          <SectionLink
+            to="/settings/about"
+            icon={CircleQuestionIcon}
+            title={l`Help and about`}
+            summary={l`Help, feedback, donate, legal, advanced`}
+          />
           <SettingsList.Divider />
           <SettingsList.PressableItem
             destructive
@@ -356,8 +176,6 @@ export function SettingsScreen({}: Props) {
         cancelButtonCta={l`Cancel`}
         confirmButtonColor="negative"
       />
-
-      <SwitchAccountDialog control={switchAccountControl} />
     </Layout.Screen>
   )
 }
@@ -608,121 +426,51 @@ function DevOptions() {
   )
 }
 
-function AddAccountRow() {
-  const {t: l} = useLingui()
-  const {setShowLoggedOut} = useLoggedOutViewControls()
-  const closeEverything = useCloseAllActiveElements()
-
-  const onAddAnotherAccount = () => {
-    setShowLoggedOut(true)
-    closeEverything()
-  }
-
+/**
+ * A top-level Settings section: icon, title and a one-line summary of what
+ * is inside.
+ */
+function SectionLink({
+  to,
+  icon,
+  title,
+  summary,
+  count = 0,
+}: {
+  to: string
+  icon: React.ComponentType<SVGIconProps>
+  title: string
+  summary: string
+  count?: number
+}) {
   return (
-    <SettingsList.PressableItem
-      onPress={onAddAnotherAccount}
-      label={l`Add another account`}>
-      <SettingsList.ItemIcon icon={PersonPlusIcon} />
-      <SettingsList.ItemText>
-        <Trans>Add another account</Trans>
-      </SettingsList.ItemText>
-    </SettingsList.PressableItem>
+    <SettingsList.LinkItem
+      to={to}
+      label={title}
+      accessibilityHint={summary}
+      contentContainerStyle={[a.align_center]}>
+      <SettingsList.ItemIcon icon={icon} />
+      <ItemTextWithSubtitle titleText={title} subtitleText={summary} />
+      <SettingsList.BadgeCount count={count} />
+    </SettingsList.LinkItem>
   )
 }
 
-function AccountRow({
-  profile,
-  account,
-  pendingDid,
-  onPressSwitchAccount,
-}: {
-  profile?: app.bsky.actor.defs.ProfileViewDetailed
-  account: SessionAccount
-  pendingDid: string | null
-  onPressSwitchAccount: (
-    account: SessionAccount,
-    logContext: 'Settings',
-  ) => void
-}) {
-  const {t: l} = useLingui()
-  const t = useTheme()
+/**
+ * Settings opens from your profile, so back goes there when there is nothing
+ * to go back to in this stack.
+ */
+function BackToProfileButton() {
+  const navigation = useNavigation<NavigationProp>()
+  const {currentAccount} = useSession()
 
-  const moderationOpts = useModerationOpts()
-  const removePromptControl = Prompt.usePromptControl()
-  const {removeAccount} = useSessionApi()
-  const {isActive: live} = useActorStatus(profile)
-
-  const onSwitchAccount = () => {
-    if (pendingDid) return
-    onPressSwitchAccount(account, 'Settings')
+  const onPress = (evt: GestureResponderEvent) => {
+    if (navigation.canGoBack()) return
+    evt.preventDefault()
+    navigation.dispatch(
+      getTabNavigationAction('MyProfile', currentAccount?.handle),
+    )
   }
 
-  return (
-    <View style={[a.relative]}>
-      <SettingsList.PressableItem
-        onPress={onSwitchAccount}
-        label={l`Switch account`}>
-        {moderationOpts && profile ? (
-          <UserAvatar
-            size={28}
-            avatar={profile.avatar}
-            moderation={moderateProfile(profile, moderationOpts).ui('avatar')}
-            type={profile.associated?.labeler ? 'labeler' : 'user'}
-            live={live}
-            hideLiveBadge
-          />
-        ) : (
-          <View style={[{width: 28}]} />
-        )}
-        <SettingsList.ItemText
-          numberOfLines={1}
-          style={[a.pr_2xl, a.leading_snug]}>
-          {sanitizeHandle(account.handle, '@')}
-        </SettingsList.ItemText>
-        {pendingDid === account.did && <SettingsList.ItemIcon icon={Loader} />}
-      </SettingsList.PressableItem>
-      {!pendingDid && (
-        <Menu.Root>
-          <Menu.Trigger label={l`Account options`}>
-            {({props, state}) => (
-              <Pressable
-                {...props}
-                hitSlop={HITSLOP_10}
-                style={[
-                  a.absolute,
-                  {top: 10, right: tokens.space.lg},
-                  a.p_xs,
-                  a.rounded_full,
-                  (state.hovered || state.pressed) && t.atoms.bg_contrast_25,
-                ]}>
-                <DotsHorizontal size="md" style={t.atoms.text} />
-              </Pressable>
-            )}
-          </Menu.Trigger>
-          <Menu.Outer showCancel>
-            <Menu.Item
-              label={l`Remove account`}
-              onPress={() => removePromptControl.open()}>
-              <Menu.ItemText>
-                <Trans>Remove account</Trans>
-              </Menu.ItemText>
-              <Menu.ItemIcon icon={PersonXIcon} />
-            </Menu.Item>
-          </Menu.Outer>
-        </Menu.Root>
-      )}
-
-      <Prompt.Basic
-        control={removePromptControl}
-        title={l`Remove from quick access?`}
-        description={l`This will remove @${account.handle} from the quick access list.`}
-        onConfirm={() => {
-          removeAccount(account)
-          Toast.show(l`Account removed from quick access`)
-        }}
-        confirmButtonCta={l`Remove`}
-        confirmButtonColor="negative"
-      />
-    </View>
-  )
+  return <Layout.Header.BackButton onPress={onPress} />
 }

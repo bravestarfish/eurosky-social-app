@@ -1,4 +1,4 @@
-import {Platform} from 'react-native'
+import {Linking, Platform} from 'react-native'
 import {setStringAsync} from 'expo-clipboard'
 import * as FileSystem from 'expo-file-system/legacy'
 import {Image} from 'expo-image'
@@ -8,15 +8,18 @@ import {Trans} from '@lingui/react/macro'
 import {type NativeStackScreenProps} from '@react-navigation/native-stack'
 import {useMutation} from '@tanstack/react-query'
 
-import {STATUS_PAGE_URL} from '#/lib/constants'
+import {HELP_DESK_URL, STATUS_PAGE_URL} from '#/lib/constants'
 import {type CommonNavigatorParams} from '#/lib/routes/types'
 import {purgeTemporaryImageFiles} from '#/state/gallery'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {Atom_Stroke2_Corner0_Rounded as AtomIcon} from '#/components/icons/Atom'
 import {BroomSparkle_Stroke2_Corner2_Rounded as BroomSparkleIcon} from '#/components/icons/BroomSparkle'
 import {Bubbles_Stroke2_Corner2_Rounded as BubblesIcon} from '#/components/icons/Bubble'
+import {CircleQuestion_Stroke2_Corner2_Rounded as CircleQuestionIcon} from '#/components/icons/CircleQuestion'
 import {CodeLines_Stroke2_Corner2_Rounded as CodeLinesIcon} from '#/components/icons/CodeLines'
 import {Globe_Stroke2_Corner0_Rounded as GlobeIcon} from '#/components/icons/Globe'
+import {Heart2_Stroke2_Corner0_Rounded as HeartIcon} from '#/components/icons/Heart2'
+import {Message_Stroke2_Corner0_Rounded as MessageIcon} from '#/components/icons/Message'
 import {Newspaper_Stroke2_Corner2_Rounded as NewspaperIcon} from '#/components/icons/Newspaper'
 import {Wrench_Stroke2_Corner2_Rounded as WrenchIcon} from '#/components/icons/Wrench'
 import * as Layout from '#/components/Layout'
@@ -83,13 +86,48 @@ export function AboutSettingsScreen({}: Props) {
         <Layout.Header.BackButton />
         <Layout.Header.Content>
           <Layout.Header.TitleText>
-            <Trans>About</Trans>
+            <Trans>Help and about</Trans>
           </Layout.Header.TitleText>
         </Layout.Header.Content>
         <Layout.Header.Slot />
       </Layout.Header.Outer>
       <Layout.Content>
         <SettingsList.Container>
+          <SettingsList.GroupHeadingText first>
+            <Trans>Help</Trans>
+          </SettingsList.GroupHeadingText>
+          <SettingsList.PressableItem
+            onPress={() => void Linking.openURL(HELP_DESK_URL)}
+            label={_(msg`Help`)}
+            accessibilityHint={_(msg`Opens helpdesk in browser`)}>
+            <SettingsList.ItemIcon icon={CircleQuestionIcon} />
+            <SettingsList.ItemText>
+              <Trans>Help</Trans>
+            </SettingsList.ItemText>
+            <SettingsList.Chevron />
+          </SettingsList.PressableItem>
+          <SettingsList.PressableItem
+            onPress={() => void Linking.openURL(BRAND.links.feedback)}
+            label={_(msg`Send feedback`)}>
+            <SettingsList.ItemIcon icon={MessageIcon} />
+            <SettingsList.ItemText>
+              <Trans>Send feedback</Trans>
+            </SettingsList.ItemText>
+            <SettingsList.Chevron />
+          </SettingsList.PressableItem>
+          <SettingsList.PressableItem
+            onPress={() => void Linking.openURL(BRAND.links.donate)}
+            label={_(msg`Donate`)}>
+            <SettingsList.ItemIcon icon={HeartIcon} />
+            <SettingsList.ItemText>
+              <Trans>Donate</Trans>
+            </SettingsList.ItemText>
+            <SettingsList.Chevron />
+          </SettingsList.PressableItem>
+
+          <SettingsList.GroupHeadingText>
+            <Trans>About</Trans>
+          </SettingsList.GroupHeadingText>
           <SettingsList.LinkItem
             to={BRAND.links.tos}
             label={_(msg`Terms of Service`)}>
@@ -114,7 +152,10 @@ export function AboutSettingsScreen({}: Props) {
               <Trans>Status Page</Trans>
             </SettingsList.ItemText>
           </SettingsList.LinkItem>
-          <SettingsList.Divider />
+
+          <SettingsList.GroupHeadingText>
+            <Trans>Advanced</Trans>
+          </SettingsList.GroupHeadingText>
           <SettingsList.LinkItem to="/sys/log" label={_(msg`System log`)}>
             <SettingsList.ItemIcon icon={CodeLinesIcon} />
             <SettingsList.ItemText>

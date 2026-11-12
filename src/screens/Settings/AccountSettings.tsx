@@ -3,6 +3,7 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {type NativeStackScreenProps} from '@react-navigation/native-stack'
 
 import {type CommonNavigatorParams} from '#/lib/routes/types'
+import {useAppPasswordsQuery} from '#/state/queries/app-passwords'
 import {useProfileQuery} from '#/state/queries/profile'
 import {useSession} from '#/state/session'
 import {consumePendingHandleStepUp} from '#/state/session/oauth-web-client'
@@ -20,8 +21,11 @@ import {At_Stroke2_Corner2_Rounded as AtIcon} from '#/components/icons/At'
 import {BirthdayCake_Stroke2_Corner2_Rounded as BirthdayCakeIcon} from '#/components/icons/BirthdayCake'
 import {Bot_Stroke2_Corner0_Rounded as RobotIcon} from '#/components/icons/Bot'
 import {Car_Stroke2_Corner2_Rounded as CarIcon} from '#/components/icons/Car'
+import {Download_Stroke2_Corner0_Rounded as DownloadIcon} from '#/components/icons/Download'
 import {Envelope_Stroke2_Corner2_Rounded as EnvelopeIcon} from '#/components/icons/Envelope'
 import {Freeze_Stroke2_Corner2_Rounded as FreezeIcon} from '#/components/icons/Freeze'
+import {Earth_Stroke2_Corner2_Rounded as EarthIcon} from '#/components/icons/Globe'
+import {Key_Stroke2_Corner2_Rounded as KeyIcon} from '#/components/icons/Key'
 import {Lock_Stroke2_Corner2_Rounded as LockIcon} from '#/components/icons/Lock'
 import {PencilLine_Stroke2_Corner2_Rounded as PencilIcon} from '#/components/icons/Pencil'
 import {ShieldCheck_Stroke2_Corner0_Rounded as ShieldIcon} from '#/components/icons/Shield'
@@ -32,6 +36,7 @@ import {ChangeHandleDialog} from './components/ChangeHandleDialog'
 import {ChangePasswordDialog} from './components/ChangePasswordDialog'
 import {DeactivateAccountDialog} from './components/DeactivateAccountDialog'
 import {DeleteAccountDialog} from './components/DeleteAccountDialog'
+import {Email2FAToggle} from './components/Email2FAToggle'
 import {ExportCarDialog} from './components/ExportCarDialog'
 
 type Props = NativeStackScreenProps<CommonNavigatorParams, 'AccountSettings'>
@@ -40,6 +45,7 @@ export function AccountSettingsScreen({}: Props) {
   const {t: l} = useLingui()
   const {currentAccount} = useSession()
   const {data: profile} = useProfileQuery({did: currentAccount?.did})
+  const {data: appPasswords} = useAppPasswordsQuery()
   const emailDialogControl = useEmailDialogControl()
   const birthdayControl = useDialogControl()
   const changeHandleControl = useDialogControl()
@@ -75,6 +81,9 @@ export function AccountSettingsScreen({}: Props) {
       </Layout.Header.Outer>
       <Layout.Content>
         <SettingsList.Container>
+          <SettingsList.GroupHeadingText first>
+            <Trans>Sign-in</Trans>
+          </SettingsList.GroupHeadingText>
           <SettingsList.Item>
             <SettingsList.ItemIcon icon={EnvelopeIcon} />
             {/* Tricky flexbox situation here: we want the email to truncate, but by default it will make the "Email" text wrap instead.
@@ -136,7 +145,6 @@ export function AccountSettingsScreen({}: Props) {
             </SettingsList.ItemText>
             <SettingsList.Chevron />
           </SettingsList.PressableItem>
-          <SettingsList.Divider />
           <SettingsList.PressableItem
             label={l`Password`}
             onPress={() => changePasswordControl.open()}>
@@ -180,7 +188,45 @@ export function AccountSettingsScreen({}: Props) {
               </SettingsList.BadgeText>
             )}
           </SettingsList.LinkItem>
-          <SettingsList.Divider />
+
+          <SettingsList.GroupHeadingText>
+            <Trans>Security</Trans>
+          </SettingsList.GroupHeadingText>
+          <SettingsList.Item>
+            <SettingsList.ItemIcon
+              icon={ShieldIcon}
+              color={
+                currentAccount?.emailAuthFactor
+                  ? t.palette.primary_500
+                  : undefined
+              }
+            />
+            <SettingsList.ItemText>
+              {currentAccount?.emailAuthFactor ? (
+                <Trans>Email 2FA enabled</Trans>
+              ) : (
+                <Trans>Two-factor authentication (2FA)</Trans>
+              )}
+            </SettingsList.ItemText>
+            <Email2FAToggle />
+          </SettingsList.Item>
+          <SettingsList.LinkItem
+            to="/settings/app-passwords"
+            label={l`App passwords`}>
+            <SettingsList.ItemIcon icon={KeyIcon} />
+            <SettingsList.ItemText>
+              <Trans>App passwords</Trans>
+            </SettingsList.ItemText>
+            {appPasswords && appPasswords.length > 0 && (
+              <SettingsList.BadgeText>
+                {appPasswords.length}
+              </SettingsList.BadgeText>
+            )}
+          </SettingsList.LinkItem>
+
+          <SettingsList.GroupHeadingText>
+            <Trans>Your data and network</Trans>
+          </SettingsList.GroupHeadingText>
           <SettingsList.PressableItem
             label={l`Export my data`}
             onPress={() => exportCarControl.open()}>
@@ -190,6 +236,26 @@ export function AccountSettingsScreen({}: Props) {
             </SettingsList.ItemText>
             <SettingsList.Chevron />
           </SettingsList.PressableItem>
+          <SettingsList.LinkItem
+            to="/settings/network-services/content-service"
+            label={l`Content service`}>
+            <SettingsList.ItemIcon icon={EarthIcon} />
+            <SettingsList.ItemText>
+              <Trans>Content service</Trans>
+            </SettingsList.ItemText>
+          </SettingsList.LinkItem>
+          <SettingsList.LinkItem
+            to="/settings/network-services/transfer-app-data"
+            label={l`Transfer app data`}>
+            <SettingsList.ItemIcon icon={DownloadIcon} />
+            <SettingsList.ItemText>
+              <Trans>Transfer app data</Trans>
+            </SettingsList.ItemText>
+          </SettingsList.LinkItem>
+
+          <SettingsList.GroupHeadingText>
+            <Trans>Leave mu</Trans>
+          </SettingsList.GroupHeadingText>
           <SettingsList.PressableItem
             label={l`Deactivate account`}
             onPress={() => deactivateAccountControl.open()}

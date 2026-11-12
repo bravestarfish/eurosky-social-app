@@ -1,26 +1,24 @@
-import {msg} from '@lingui/core/macro'
+import {msg, plural} from '@lingui/core/macro'
 import {useLingui} from '@lingui/react'
 import {Trans} from '@lingui/react/macro'
 import {type NativeStackScreenProps} from '@react-navigation/native-stack'
 
 import {type CommonNavigatorParams} from '#/lib/routes/types'
 import {useNotificationDeclarationQuery} from '#/state/queries/activity-subscriptions'
-import {useAppPasswordsQuery} from '#/state/queries/app-passwords'
-import {useSession} from '#/state/session'
+import {useModerationInboxBadgeCount} from '#/state/queries/moderation-inbox'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
-import {atoms as a, useTheme} from '#/alf'
+import {atoms as a} from '#/alf'
 import * as Admonition from '#/components/Admonition'
 import {BellRinging_Stroke2_Corner0_Rounded as BellRingingIcon} from '#/components/icons/BellRinging'
 import {EyeSlash_Stroke2_Corner0_Rounded as EyeSlashIcon} from '#/components/icons/EyeSlash'
-import {Key_Stroke2_Corner2_Rounded as KeyIcon} from '#/components/icons/Key'
 import {MagnifyingGlass_Stroke2_Corner0_Rounded as MagnifyingGlassIcon} from '#/components/icons/MagnifyingGlass'
+import {RaisingHand4Finger_Stroke2_Corner2_Rounded as HandIcon} from '#/components/icons/RaisingHand'
 import {ShieldCheck_Stroke2_Corner0_Rounded as ShieldIcon} from '#/components/icons/Shield'
 import * as Layout from '#/components/Layout'
 import {InlineLinkText} from '#/components/Link'
 import {BRAND} from '#/config/brand'
 import {type app} from '#/lexicons'
 import {AlgoVisibilityOptOut} from './components/AlgoVisibilityOptOut'
-import {Email2FAToggle} from './components/Email2FAToggle'
 import {PwiOptOut} from './components/PwiOptOut'
 import {ItemTextWithSubtitle} from './NotificationSettings/components/ItemTextWithSubtitle'
 
@@ -30,9 +28,7 @@ type Props = NativeStackScreenProps<
 >
 export function PrivacyAndSecuritySettingsScreen({}: Props) {
   const {_} = useLingui()
-  const t = useTheme()
-  const {data: appPasswords} = useAppPasswordsQuery()
-  const {currentAccount} = useSession()
+  const moderationInboxCount = useModerationInboxBadgeCount()
   const {
     data: notificationDeclaration,
     isPending,
@@ -45,44 +41,49 @@ export function PrivacyAndSecuritySettingsScreen({}: Props) {
         <Layout.Header.BackButton />
         <Layout.Header.Content>
           <Layout.Header.TitleText>
-            <Trans>Privacy and Security</Trans>
+            <Trans>Privacy and safety</Trans>
           </Layout.Header.TitleText>
         </Layout.Header.Content>
         <Layout.Header.Slot />
       </Layout.Header.Outer>
       <Layout.Content>
         <SettingsList.Container>
-          <SettingsList.Item>
-            <SettingsList.ItemIcon
-              icon={ShieldIcon}
-              color={
-                currentAccount?.emailAuthFactor
-                  ? t.palette.primary_500
-                  : undefined
+          <SettingsList.GroupHeadingText first>
+            <Trans>Moderation</Trans>
+          </SettingsList.GroupHeadingText>
+          <SettingsList.LinkItem
+            to="/moderation"
+            label={_(msg`Moderation tools`)}
+            contentContainerStyle={[a.align_start]}
+            accessibilityHint={
+              moderationInboxCount > 0
+                ? plural(moderationInboxCount, {
+                    one: '# unread update',
+                    other: '# unread updates',
+                  })
+                : undefined
+            }>
+            <SettingsList.ItemIcon icon={HandIcon} />
+            <ItemTextWithSubtitle
+              titleText={<Trans>Moderation tools</Trans>}
+              subtitleText={
+                <Trans>Muted words, blocks, content filters, labelers</Trans>
               }
             />
-            <SettingsList.ItemText>
-              {currentAccount?.emailAuthFactor ? (
-                <Trans>Email 2FA enabled</Trans>
-              ) : (
-                <Trans>Two-factor authentication (2FA)</Trans>
-              )}
-            </SettingsList.ItemText>
-            <Email2FAToggle />
-          </SettingsList.Item>
-          <SettingsList.LinkItem
-            to="/settings/app-passwords"
-            label={_(msg`App passwords`)}>
-            <SettingsList.ItemIcon icon={KeyIcon} />
-            <SettingsList.ItemText>
-              <Trans>App passwords</Trans>
-            </SettingsList.ItemText>
-            {appPasswords && appPasswords.length > 0 && (
-              <SettingsList.BadgeText>
-                {appPasswords.length}
-              </SettingsList.BadgeText>
-            )}
+            <SettingsList.BadgeCount count={moderationInboxCount} />
           </SettingsList.LinkItem>
+          <SettingsList.LinkItem
+            to="/moderation/verification-settings"
+            label={_(msg`Verification`)}>
+            <SettingsList.ItemIcon icon={ShieldIcon} />
+            <SettingsList.ItemText>
+              <Trans>Verification</Trans>
+            </SettingsList.ItemText>
+          </SettingsList.LinkItem>
+
+          <SettingsList.GroupHeadingText>
+            <Trans>Your visibility</Trans>
+          </SettingsList.GroupHeadingText>
           <SettingsList.LinkItem
             label={_(
               msg`Settings for allowing others to be notified of your posts`,
@@ -103,7 +104,6 @@ export function PrivacyAndSecuritySettingsScreen({}: Props) {
               showSkeleton={isPending}
             />
           </SettingsList.LinkItem>
-          <SettingsList.Divider />
           <SettingsList.Item style={[a.align_start]}>
             <SettingsList.ItemIcon icon={MagnifyingGlassIcon} />
             <AlgoVisibilityOptOut />

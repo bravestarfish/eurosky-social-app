@@ -360,3 +360,34 @@ export function BadgeButton({
     </Button.Button>
   )
 }
+
+/**
+ * A small heading that names a group of rows on a settings section page,
+ * e.g. "Security" on the Account page.
+ */
+export function GroupHeadingText({
+  children,
+  first = false,
+}: {
+  children: React.ReactNode
+  /** The first heading on a page sits closer to the header. */
+  first?: boolean
+}) {
+  const t = useTheme()
+  return (
+    <Text
+      role="heading"
+      aria-level={2}
+      style={[
+        a.px_xl,
+        first ? a.pt_xs : a.pt_lg,
+        a.pb_xs,
+        a.text_xs,
+        a.font_semi_bold,
+        {textTransform: 'uppercase', letterSpacing: 0.6},
+        t.atoms.text_contrast_medium,
+      ]}>
+      {children}
+    </Text>
+  )
+}

@@ -67,6 +67,8 @@ import {ExploreScreenLiveEventFeedsBanner} from '#/features/liveEvents/component
 import {ExploreLiveSportsWidget} from '#/features/liveSports/components/ExploreLiveSportsWidget'
 import {type app} from '#/lexicons'
 import * as ModuleHeader from './components/ModuleHeader'
+import {ExploreAtmosphere} from './modules/ExploreAtmosphere'
+import {ExploreFindFriends} from './modules/ExploreFindFriends'
 import {
   SuggestedAccountsTabBar,
   SuggestedProfileCard,
@@ -144,6 +146,14 @@ type ExploreScreenItems =
     }
   | {
       type: 'trendingTopics'
+      key: string
+    }
+  | {
+      type: 'atmosphere'
+      key: string
+    }
+  | {
+      type: 'findFriends'
       key: string
     }
   | {
@@ -735,6 +745,8 @@ export function Explore({
     i.push({type: 'liveSportsWidget', key: 'liveSportsWidget'})
 
     if (useFullExperience) {
+      i.push({type: 'findFriends', key: 'find-friends'})
+      i.push({type: 'atmosphere', key: 'atmosphere'})
       i.push(trendingTopicsModule)
       i.push(...suggestedFeedsModule)
       i.push(...suggestedFollowsModule)
@@ -810,6 +822,12 @@ export function Explore({
         }
         case 'trendingVideos': {
           return <ExploreTrendingVideos />
+        }
+        case 'atmosphere': {
+          return <ExploreAtmosphere />
+        }
+        case 'findFriends': {
+          return <ExploreFindFriends />
         }
         case 'profile': {
           return (

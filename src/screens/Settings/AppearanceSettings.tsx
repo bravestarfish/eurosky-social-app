@@ -17,15 +17,19 @@ import {useSetThemePrefs, useThemePrefs} from '#/state/shell'
 import {type Alf, atoms as a, native, useAlf, useTheme} from '#/alf'
 import * as SegmentedControl from '#/components/forms/SegmentedControl'
 import * as Toggle from '#/components/forms/Toggle'
+import {Accessibility_Stroke2_Corner2_Rounded as AccessibilityIcon} from '#/components/icons/Accessibility'
 import {ColorPalette_Stroke2_Corner0_Rounded as ColorPaletteIcon} from '#/components/icons/ColorPalette'
 import {type Props as SVGIconProps} from '#/components/icons/common'
+import {Heart2_Stroke2_Corner0_Rounded as HeartIcon} from '#/components/icons/Heart2'
 import {Moon_Stroke2_Corner0_Rounded as MoonIcon} from '#/components/icons/Moon'
 import {Phone_Stroke2_Corner0_Rounded as PhoneIcon} from '#/components/icons/Phone'
+import {Sparkle_Stroke2_Corner0_Rounded as SparkleIcon} from '#/components/icons/Sparkle'
 import {SquareBehindSquare_Stroke2_Corner2_Rounded as SquareBehindSquareIcon} from '#/components/icons/SquareBehindSquare4'
 import {TextSize_Stroke2_Corner0_Rounded as TextSize} from '#/components/icons/TextSize'
 import {TitleCase_Stroke2_Corner0_Rounded as Aa} from '#/components/icons/TitleCase'
 import * as Layout from '#/components/Layout'
 import {Text} from '#/components/Typography'
+import {BRAND} from '#/config/brand'
 import {ACCENTS, DEFAULT_ACCENT} from '#/config/brand-theme'
 import * as SettingsList from './components/SettingsList'
 
@@ -74,7 +78,7 @@ export function AppearanceSettingsScreen({}: Props) {
           <Layout.Header.BackButton />
           <Layout.Header.Content>
             <Layout.Header.TitleText>
-              <Trans>Appearance</Trans>
+              <Trans>Look and feel</Trans>
             </Layout.Header.TitleText>
           </Layout.Header.Content>
           <Layout.Header.Slot />
@@ -201,6 +205,36 @@ export function AppearanceSettingsScreen({}: Props) {
                 </>
               )}*/}
             </Animated.View>
+
+            <SettingsList.GroupHeadingText>
+              <Trans>More</Trans>
+            </SettingsList.GroupHeadingText>
+            <SettingsList.LinkItem
+              to="/settings/accessibility"
+              label={l`Accessibility`}>
+              <SettingsList.ItemIcon icon={AccessibilityIcon} />
+              <SettingsList.ItemText>
+                <Trans>Accessibility</Trans>
+              </SettingsList.ItemText>
+            </SettingsList.LinkItem>
+            <SettingsList.LinkItem
+              to="/settings/pet-companion"
+              label={l`Companion`}>
+              <SettingsList.ItemIcon icon={HeartIcon} />
+              <SettingsList.ItemText>
+                <Trans>Companion</Trans>
+              </SettingsList.ItemText>
+            </SettingsList.LinkItem>
+            {BRAND.decorations.enabled && (
+              <SettingsList.LinkItem
+                to="/settings/decorations"
+                label={l`Profile decorations`}>
+                <SettingsList.ItemIcon icon={SparkleIcon} />
+                <SettingsList.ItemText>
+                  <Trans>Profile decorations</Trans>
+                </SettingsList.ItemText>
+              </SettingsList.LinkItem>
+            )}
           </SettingsList.Container>
         </Layout.Content>
       </Layout.Screen>
