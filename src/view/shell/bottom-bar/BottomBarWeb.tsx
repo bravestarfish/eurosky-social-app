@@ -1,5 +1,5 @@
 import {useCallback, useEffect} from 'react'
-import {Pressable, View} from 'react-native'
+import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import {msg, plural} from '@lingui/core/macro'
@@ -7,7 +7,6 @@ import {useLingui} from '@lingui/react'
 import {Trans} from '@lingui/react/macro'
 import {useNavigationState} from '@react-navigation/native'
 
-import {UNREAD_NOTIFICATION_CAP} from '#/lib/constants'
 import {useHideBottomBarBorder} from '#/lib/hooks/useHideBottomBarBorder'
 import {useMinimalShellFooterTransform} from '#/lib/hooks/useMinimalShellTransform'
 import {getCurrentRoute, isTab, SECONDARY_TABS} from '#/lib/routes/helpers'
@@ -29,25 +28,15 @@ import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
 import {SwitchAccountDialog} from '#/components/dialogs/SwitchAccount'
-import {ArrowsSwap_Stroke2_Corner2_Rounded as SwitchIcon} from '#/components/icons/ArrowsSwap'
 import {
   Bell_Filled_Corner0_Rounded as BellFilled,
   Bell_Stroke2_Corner0_Rounded as Bell,
 } from '#/components/icons/Bell'
-import {
-  Bookmark_Filled_Corner0_Rounded as BookmarkFilled,
-  Bookmark_Stroke2_Corner0_Rounded as Bookmark,
-} from '#/components/icons/Bookmark'
 import {type Props as SVGIconProps} from '#/components/icons/common'
-import {HomeOpen_Stoke2_Corner0_Rounded as Home} from '#/components/icons/HomeOpen'
 import {
   MagnifyingGlass_Filled_Stroke2_Corner0_Rounded as MagnifyingGlassFilled,
   MagnifyingGlass_Stroke2_Corner0_Rounded as MagnifyingGlass,
 } from '#/components/icons/MagnifyingGlass'
-import {
-  Message_Stroke2_Corner0_Rounded as Message,
-  Message_Stroke2_Corner0_Rounded_Filled as MessageFilled,
-} from '#/components/icons/Message'
 import {
   Newspaper_Filled_Corner2_Rounded as NewspaperFilled,
   Newspaper_Stroke2_Corner2_Rounded as Newspaper,
@@ -56,17 +45,13 @@ import {
   Posts_Stroke2_Corner2_Rounded as Posts,
   Posts_Stroke3_Corner2_Rounded as PostsActive,
 } from '#/components/icons/Posts'
-import {
-  SettingsGear2_Filled_Corner0_Rounded as SettingsFilled,
-  SettingsGear2_Stroke2_Corner0_Rounded as Settings,
-} from '#/components/icons/Settings'
 import {Text} from '#/components/Typography'
 import {useAgeAssurance} from '#/ageAssurance'
 import {useAnalytics} from '#/analytics'
 import {isFollowingV2HomeDotEnabled} from '#/features/followingV2/eligibility'
 import {NEWS_V2_ENABLED} from '#/features/newsFeed/config'
 import {styles} from './BottomBarStyles'
-import {shouldShowProfileBarWeb} from './profileBar'
+import {isProfileSpaceRoute} from './profileSpace'
 
 type NavItemValue =
   | 'home'
@@ -103,21 +88,7 @@ export function BottomBarWeb() {
   const accountSwitchControl = useDialogControl()
   const {data: profile} = useProfileQuery({did: currentAccount?.did})
   const iconWidth = ICON_WIDTH
-  const {i18n} = useLingui()
   const moderationInboxCount = useModerationInboxBadgeCount()
-  const currentRoute = useNavigationState(state =>
-    state ? getCurrentRoute(state) : {name: 'Home', params: undefined},
-  )
-  const showProfileBar = shouldShowProfileBarWeb({
-    routeName: currentRoute.name,
-    profileName:
-      currentRoute.name === 'Profile'
-        ? (currentRoute.params as CommonNavigatorParams['Profile'] | undefined)
-            ?.name
-        : undefined,
-    currentHandle: currentAccount?.handle,
-    currentDid: currentAccount?.did,
-  })
 
   const unreadMessageCount = useUnreadMessageCount()
   const notificationCountStr = useUnreadNotifications()
@@ -127,12 +98,6 @@ export function BottomBarWeb() {
   const isLabeler = profile?.associated?.labeler
   const hasUnreadMessages =
     !aa.flags.chatDisabled && unreadMessageCount.count > 0
-  const settingsCount =
-    moderationInboxCount > 0
-      ? moderationInboxCount >= UNREAD_NOTIFICATION_CAP
-        ? `${i18n.number(UNREAD_NOTIFICATION_CAP - 1)}+`
-        : i18n.number(moderationInboxCount)
-      : undefined
 
   const showSignIn = useCallback(() => {
     closeAllActiveElements()
@@ -167,195 +132,102 @@ export function BottomBarWeb() {
         ]}
         onLayout={event => footerHeight.set(event.nativeEvent.layout.height)}>
         {hasSession ? (
-          showProfileBar ? (
-            <>
-              <NavItem
-                routeName="Home"
-                href="/"
-                navItem="home"
-                surface="profileBar"
-                label={_(msg({message: 'Home', context: 'profile bar tab'}))}
-                forceInactive>
-                {() => <TabIcon isActive={false} Icon={Home} />}
-              </NavItem>
-              <NavItem
-                routeName="Messages"
-                href="/messages"
-                navItem="messages"
-                surface="profileBar"
-                label={_(
-                  msg({message: 'Messages', context: 'profile bar tab'}),
-                )}
-                notificationCount={
-                  aa.flags.chatDisabled
-                    ? undefined
-                    : unreadMessageCount.numUnread
-                }
-                hasNew={
-                  aa.flags.chatDisabled ? false : unreadMessageCount.hasNew
-                }>
-                {({isActive}) => (
-                  <TabIcon
-                    isActive={isActive}
-                    Icon={isActive ? MessageFilled : Message}
-                  />
-                )}
-              </NavItem>
-              <NavItem
-                routeName="Library"
-                href="/library"
-                navItem="library"
-                surface="profileBar"
-                label={_(
-                  msg({message: 'Library', context: 'profile bar tab'}),
-                )}>
-                {({isActive}) => (
-                  <TabIcon
-                    isActive={isActive}
-                    Icon={isActive ? BookmarkFilled : Bookmark}
-                  />
-                )}
-              </NavItem>
-              <NavItem
-                routeName="Settings"
-                href="/settings"
-                navItem="settings"
-                surface="profileBar"
-                label={_(
-                  msg({message: 'Settings', context: 'profile bar tab'}),
-                )}
-                notificationCount={settingsCount}>
-                {({isActive}) => (
-                  <TabIcon
-                    isActive={isActive}
-                    Icon={isActive ? SettingsFilled : Settings}
-                  />
-                )}
-              </NavItem>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={_(msg`Switch account`)}
-                accessibilityHint=""
-                onPress={() => {
-                  ax.metric('nav:click', {
-                    item: 'switchAccount',
-                    surface: 'profileBar',
-                  })
-                  accountSwitchControl.open()
-                }}
-                style={[styles.ctrl, a.pb_lg]}>
-                <TabIcon isActive={false} Icon={SwitchIcon} />
-                <TabLabel
-                  isActive={false}
-                  label={_(
-                    msg({
-                      message: 'Switch',
-                      context: 'profile bar, switch account',
-                    }),
-                  )}
+          <>
+            <NavItem
+              routeName="Home"
+              href="/"
+              navItem="home"
+              label={_(msg({message: 'Posts', context: 'bottom bar tab'}))}
+              hasNew={hasHomeBadge && isFollowingV2HomeDotEnabled(ax)}>
+              {({isActive}) => (
+                <TabIcon
+                  isActive={isActive}
+                  Icon={isActive ? PostsActive : Posts}
                 />
-              </Pressable>
-            </>
-          ) : (
-            <>
-              <NavItem
-                routeName="Home"
-                href="/"
-                navItem="home"
-                label={_(msg({message: 'Posts', context: 'bottom bar tab'}))}
-                hasNew={hasHomeBadge && isFollowingV2HomeDotEnabled(ax)}>
-                {({isActive}) => (
-                  <TabIcon
-                    isActive={isActive}
-                    Icon={isActive ? PostsActive : Posts}
-                  />
-                )}
-              </NavItem>
-              <NavItem
-                routeName={SECONDARY_TABS.News.rootRoute}
-                href={NEWS_V2_ENABLED ? '/news/explore' : '/news'}
-                navItem="news"
-                label={_(msg({message: 'News', context: 'bottom bar tab'}))}>
-                {({isActive}) => (
-                  <TabIcon
-                    isActive={isActive}
-                    Icon={isActive ? NewspaperFilled : Newspaper}
-                  />
-                )}
-              </NavItem>
-              <NavItem
-                routeName="Search"
-                href="/search"
-                navItem="search"
-                label={_(msg({message: 'Search', context: 'bottom bar tab'}))}>
-                {({isActive}) => (
-                  <TabIcon
-                    isActive={isActive}
-                    Icon={isActive ? MagnifyingGlassFilled : MagnifyingGlass}
-                  />
-                )}
-              </NavItem>
-              <NavItem
-                routeName="Notifications"
-                href="/notifications"
-                navItem="notifications"
-                label={_(
-                  msg({
-                    message: 'Notifications',
-                    context: 'bottom bar tab',
-                    comment:
-                      'Bottom bar tab label. Space is tight, so use a short word if your language has one, e.g. "Alerts".',
-                  }),
-                )}
-                notificationCount={notificationCountStr}>
-                {({isActive}) => (
-                  <TabIcon
-                    isActive={isActive}
-                    Icon={isActive ? BellFilled : Bell}
-                  />
-                )}
-              </NavItem>
-              <NavItem
-                routeName="Profile"
-                href={
-                  currentAccount
-                    ? makeProfileLink({
-                        did: currentAccount.did,
-                        handle: currentAccount.handle,
-                      })
-                    : '/'
-                }
-                navItem="profile"
-                label={_(msg({message: 'Profile', context: 'bottom bar tab'}))}
-                hasNew={hasUnreadMessages}
-                onLongPress={onLongPressProfile}>
-                {({isActive}) => (
-                  <View style={styles.ctrlIconSizingWrapper}>
-                    <View
-                      style={[
-                        styles.ctrlIcon,
-                        isLabeler
-                          ? styles.profileIconSquare
-                          : styles.profileIcon,
-                        isActive && [
-                          isLabeler ? styles.onProfileSquare : styles.onProfile,
-                          {
-                            borderColor: t.palette.primary_500,
-                            borderWidth: 2,
-                          },
-                        ],
-                      ]}>
-                      <UserAvatar
-                        avatar={profile?.avatar}
-                        size={iconWidth - (isActive ? 4 : 2)}
-                        type={profile?.associated?.labeler ? 'labeler' : 'user'}
-                      />
-                    </View>
+              )}
+            </NavItem>
+            <NavItem
+              routeName={SECONDARY_TABS.News.rootRoute}
+              href={NEWS_V2_ENABLED ? '/news/explore' : '/news'}
+              navItem="news"
+              label={_(msg({message: 'News', context: 'bottom bar tab'}))}>
+              {({isActive}) => (
+                <TabIcon
+                  isActive={isActive}
+                  Icon={isActive ? NewspaperFilled : Newspaper}
+                />
+              )}
+            </NavItem>
+            <NavItem
+              routeName="Search"
+              href="/search"
+              navItem="search"
+              label={_(msg({message: 'Search', context: 'bottom bar tab'}))}>
+              {({isActive}) => (
+                <TabIcon
+                  isActive={isActive}
+                  Icon={isActive ? MagnifyingGlassFilled : MagnifyingGlass}
+                />
+              )}
+            </NavItem>
+            <NavItem
+              routeName="Notifications"
+              href="/notifications"
+              navItem="notifications"
+              label={_(
+                msg({
+                  message: 'Notifications',
+                  context: 'bottom bar tab',
+                  comment:
+                    'Bottom bar tab label. Space is tight, so use a short word if your language has one, e.g. "Alerts".',
+                }),
+              )}
+              notificationCount={notificationCountStr}>
+              {({isActive}) => (
+                <TabIcon
+                  isActive={isActive}
+                  Icon={isActive ? BellFilled : Bell}
+                />
+              )}
+            </NavItem>
+            <NavItem
+              routeName="Profile"
+              href={
+                currentAccount
+                  ? makeProfileLink({
+                      did: currentAccount.did,
+                      handle: currentAccount.handle,
+                    })
+                  : '/'
+              }
+              navItem="profile"
+              label={_(msg({message: 'Profile', context: 'bottom bar tab'}))}
+              hasNew={hasUnreadMessages || moderationInboxCount > 0}
+              onLongPress={onLongPressProfile}>
+              {({isActive}) => (
+                <View style={styles.ctrlIconSizingWrapper}>
+                  <View
+                    style={[
+                      styles.ctrlIcon,
+                      isLabeler ? styles.profileIconSquare : styles.profileIcon,
+                      isActive && [
+                        isLabeler ? styles.onProfileSquare : styles.onProfile,
+                        {
+                          borderColor: t.palette.primary_500,
+                          borderWidth: 2,
+                        },
+                      ],
+                    ]}>
+                    <UserAvatar
+                      avatar={profile?.avatar}
+                      size={iconWidth - (isActive ? 4 : 2)}
+                      type={profile?.associated?.labeler ? 'labeler' : 'user'}
+                    />
                   </View>
-                )}
-              </NavItem>
-            </>
-          )
+                </View>
+              )}
+            </NavItem>
+          </>
         ) : (
           <>
             <View
@@ -450,8 +322,6 @@ function NavItem({
   routeName,
   navItem,
   label,
-  surface = 'bottomBar',
-  forceInactive = false,
   hasNew,
   notificationCount,
   onLongPress,
@@ -461,9 +331,6 @@ function NavItem({
   routeName: string
   navItem: NavItemValue
   label: string
-  surface?: 'bottomBar' | 'profileBar'
-  /** Home in the Profile bar leaves your space, so it is never shown active. */
-  forceInactive?: boolean
   hasNew?: boolean
   notificationCount?: string
   onLongPress?: () => void
@@ -480,8 +347,8 @@ function NavItem({
   })
 
   const onBeforePress = useCallback(() => {
-    ax.metric('nav:click', {item: navItem, surface})
-  }, [ax, navItem, surface])
+    ax.metric('nav:click', {item: navItem, surface: 'bottomBar'})
+  }, [ax, navItem])
 
   // Checks whether we're on someone else's profile
   const isOnDifferentProfile =
@@ -491,18 +358,15 @@ function NavItem({
       currentAccount?.handle
 
   const isActive =
-    !forceInactive &&
-    (currentRoute.name === 'Profile'
+    currentRoute.name === 'Profile'
       ? isTab(currentRoute.name, routeName) &&
         (currentRoute.params as CommonNavigatorParams['Profile']).name ===
           (routeName === 'Profile'
             ? currentAccount?.handle
             : (currentRoute.params as CommonNavigatorParams['Profile']).name)
       : isTab(currentRoute.name, routeName) ||
-        (routeName === 'Settings' &&
-          shouldShowProfileBarWeb({routeName: currentRoute.name}) &&
-          currentRoute.name !== 'Messages' &&
-          currentRoute.name !== 'Library'))
+        // Messages, Library and Settings open from your profile.
+        (routeName === 'Profile' && isProfileSpaceRoute(currentRoute.name))
 
   return (
     <Link

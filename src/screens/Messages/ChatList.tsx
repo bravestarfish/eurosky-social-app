@@ -31,6 +31,7 @@ import {ChatListSkeleton} from '#/screens/Messages/components/ChatListSkeleton'
 import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
 import {AgeRestrictedScreen} from '#/components/ageAssurance/AgeRestrictedScreen'
 import {useAgeAssuranceCopy} from '#/components/ageAssurance/useAgeAssuranceCopy'
+import {BackToProfileButton} from '#/components/BackToProfileButton'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {type DialogControlProps, useDialogControl} from '#/components/Dialog'
 import {NewChat} from '#/components/dms/dialogs/NewChatDialog'
@@ -552,7 +553,7 @@ export function Header({
         <>
           <Layout.Header.Content align="left">
             <Layout.Header.TitleText>
-              <Trans>Chats</Trans>
+              <Trans>Messages</Trans>
             </Layout.Header.TitleText>
           </Layout.Header.Content>
 
@@ -589,6 +590,7 @@ export function Header({
         </>
       ) : (
         <>
+          <BackToProfileButton />
           <Layout.Header.Content align="left">
             <Layout.Header.TitleText>
               <Trans>Messages</Trans>

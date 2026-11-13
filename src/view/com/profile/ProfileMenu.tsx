@@ -22,7 +22,9 @@ import {Button, ButtonIcon} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
 import {UserAddRemoveListsDialog} from '#/components/dialogs/lists/UserAddRemoveListsDialog'
 import {StarterPackDialog} from '#/components/dialogs/StarterPackDialog'
+import {SwitchAccountDialog} from '#/components/dialogs/SwitchAccount'
 import {ArrowOutOfBoxModified_Stroke2_Corner2_Rounded as ArrowOutOfBoxIcon} from '#/components/icons/ArrowOutOfBox'
+import {ArrowsSwap_Stroke2_Corner2_Rounded as SwitchIcon} from '#/components/icons/ArrowsSwap'
 import {At_Stroke2_Corner2_Rounded as AtIcon} from '#/components/icons/At'
 import {ChainLink_Stroke2_Corner0_Rounded as ChainLinkIcon} from '#/components/icons/ChainLink'
 import {CircleCheck_Stroke2_Corner0_Rounded as CircleCheckIcon} from '#/components/icons/CircleCheck'
@@ -79,6 +81,7 @@ let ProfileMenu = ({
   const {t: l} = useLingui()
   const {currentAccount, hasSession} = useSession()
   const reportDialogControl = useReportDialogControl()
+  const switchAccountControl = useDialogControl()
   const queryClient = useQueryClient()
   const navigation = useNavigation<NavigationProp>()
   const isSelf = currentAccount?.did === profile.did
@@ -311,6 +314,28 @@ let ProfileMenu = ({
         </Menu.Trigger>
 
         <Menu.Outer style={{minWidth: 170}}>
+          {isSelf && (
+            <>
+              <Menu.Group>
+                <Menu.Item
+                  testID="profileHeaderDropdownSwitchAccountBtn"
+                  label={l`Switch account`}
+                  onPress={() => {
+                    ax.metric('nav:click', {
+                      item: 'switchAccount',
+                      surface: 'profileHeader',
+                    })
+                    switchAccountControl.open()
+                  }}>
+                  <Menu.ItemText>
+                    <Trans>Switch account</Trans>
+                  </Menu.ItemText>
+                  <Menu.ItemIcon icon={SwitchIcon} />
+                </Menu.Item>
+              </Menu.Group>
+              <Menu.Divider />
+            </>
+          )}
           <Menu.Group>
             <Menu.Item
               testID="profileHeaderDropdownShareBtn"
@@ -584,6 +609,7 @@ let ProfileMenu = ({
           ) : null}
         </Menu.Outer>
       </Menu.Root>
+      {isSelf && <SwitchAccountDialog control={switchAccountControl} />}
       <StarterPackDialog
         control={addToStarterPacksDialogControl}
         targetDid={profile.did}

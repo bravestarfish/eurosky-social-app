@@ -20,7 +20,7 @@ import {
 } from '#/state/queries/profile'
 import {useRequireAuth, useSession} from '#/state/session'
 import {ProfileMenu} from '#/view/com/profile/ProfileMenu'
-import {atoms as a, platform} from '#/alf'
+import {atoms as a, platform, useBreakpoints} from '#/alf'
 import {SubscribeProfileButton} from '#/components/activity-notifications/SubscribeProfileButton'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {DebugFieldDisplay} from '#/components/DebugFieldDisplay'
@@ -49,6 +49,7 @@ import {ProfileHeaderDisplayName} from './DisplayName'
 import {EditProfileDialog} from './EditProfileDialog'
 import {ProfileHeaderHandle} from './Handle'
 import {ProfileHeaderMetrics} from './Metrics'
+import {ProfileShortcuts} from './ProfileShortcuts'
 import {ProfileHeaderShell} from './Shell'
 import {ProfileHeaderSuggestedFollows} from './SuggestedFollows'
 
@@ -104,6 +105,7 @@ let ProfileHeaderStandard = ({
   }
 
   const isMe = currentAccount?.did === profile.did
+  const {gtMobile} = useBreakpoints()
 
   const {isActive: live} = useActorStatus(profile)
 
@@ -136,6 +138,7 @@ let ProfileHeaderStandard = ({
               onUnfollow={() => setShowSuggestedFollows(false)}
             />
           </View>
+          {isMe && !gtMobile && <ProfileShortcuts />}
           <View
             style={[a.flex_col, a.gap_xs, a.pb_sm, live ? a.pt_sm : a.pt_2xs]}>
             <ProfileHeaderDisplayName

@@ -1,24 +1,22 @@
 import {useState} from 'react'
-import {type GestureResponderEvent} from 'react-native'
 import {AtUri} from '@atproto/syntax'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 
 import {useRequireEmailVerification} from '#/lib/hooks/useRequireEmailVerification'
-import {getTabNavigationAction} from '#/lib/routes/navigation'
 import {
   type CommonNavigatorParams,
   type LibraryTabName,
   type NativeStackScreenProps,
   type NavigationProp,
 } from '#/lib/routes/types'
-import {useSession} from '#/state/session'
 import {MyLists} from '#/view/com/lists/MyLists'
 import {Pager} from '#/view/com/pager/Pager'
 import {TabBar} from '#/view/com/pager/TabBar'
 import {FeedsView} from '#/view/screens/Feeds'
 import {BookmarksInner} from '#/screens/Bookmarks'
 import {atoms as a, web} from '#/alf'
+import {BackToProfileButton} from '#/components/BackToProfileButton'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
 import {CreateOrEditListDialog} from '#/components/dialogs/lists/CreateOrEditListDialog'
@@ -79,25 +77,6 @@ export function LibraryScreen({route}: Props) {
       </Pager>
     </Layout.Screen>
   )
-}
-
-/**
- * The Library opens from your profile, so back goes there when there is
- * nothing to go back to in this stack.
- */
-function BackToProfileButton() {
-  const navigation = useNavigation<NavigationProp>()
-  const {currentAccount} = useSession()
-
-  const onPress = (evt: GestureResponderEvent) => {
-    if (navigation.canGoBack()) return
-    evt.preventDefault()
-    navigation.dispatch(
-      getTabNavigationAction('MyProfile', currentAccount?.handle),
-    )
-  }
-
-  return <Layout.Header.BackButton onPress={onPress} />
 }
 
 function EditFeedsButton() {

@@ -1,10 +1,5 @@
 import {useState} from 'react'
-import {
-  Alert,
-  type GestureResponderEvent,
-  LayoutAnimation,
-  View,
-} from 'react-native'
+import {Alert, LayoutAnimation, View} from 'react-native'
 import {useReducedMotion} from 'react-native-reanimated'
 import {removeNuxs} from '@bsky/sdk'
 import {moderateProfile} from '@bsky/sdk/moderation'
@@ -13,10 +8,7 @@ import {useNavigation} from '@react-navigation/native'
 import {type NativeStackScreenProps} from '@react-navigation/native-stack'
 
 import {useApplyPullRequestOTAUpdate} from '#/lib/hooks/useOTAUpdates'
-import {
-  getHomeNavigationAction,
-  getTabNavigationAction,
-} from '#/lib/routes/navigation'
+import {getHomeNavigationAction} from '#/lib/routes/navigation'
 import {
   type CommonNavigatorParams,
   type NavigationProp,
@@ -36,6 +28,7 @@ import {UserAvatar} from '#/view/com/util/UserAvatar'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {AgeAssuranceDismissibleNotice} from '#/components/ageAssurance/AgeAssuranceDismissibleNotice'
+import {BackToProfileButton} from '#/components/BackToProfileButton'
 import {Button, ButtonText} from '#/components/Button'
 import {Bell_Stroke2_Corner0_Rounded as NotificationIcon} from '#/components/icons/Bell'
 import {CircleQuestion_Stroke2_Corner2_Rounded as CircleQuestionIcon} from '#/components/icons/CircleQuestion'
@@ -454,23 +447,4 @@ function SectionLink({
       <SettingsList.BadgeCount count={count} />
     </SettingsList.LinkItem>
   )
-}
-
-/**
- * Settings opens from your profile, so back goes there when there is nothing
- * to go back to in this stack.
- */
-function BackToProfileButton() {
-  const navigation = useNavigation<NavigationProp>()
-  const {currentAccount} = useSession()
-
-  const onPress = (evt: GestureResponderEvent) => {
-    if (navigation.canGoBack()) return
-    evt.preventDefault()
-    navigation.dispatch(
-      getTabNavigationAction('MyProfile', currentAccount?.handle),
-    )
-  }
-
-  return <Layout.Header.BackButton onPress={onPress} />
 }
