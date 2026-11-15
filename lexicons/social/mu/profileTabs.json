@@ -1,0 +1,35 @@
+{
+  "lexicon": 1,
+  "id": "social.mu.profileTabs",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "literal:self",
+      "description": "Which tabs the account owner shows on their profile in mu. Presentation only: hiding a tab does not hide the records behind it, which stay public in the repository and visible in other apps.",
+      "record": {
+        "type": "object",
+        "required": ["tabs", "updatedAt"],
+        "properties": {
+          "tabs": {
+            "type": "array",
+            "maxLength": 20,
+            "description": "Tabs to show, by name. Unknown names are ignored, so new tabs can be added later.",
+            "items": {
+              "type": "string",
+              "knownValues": [
+                "posts",
+                "replies",
+                "media",
+                "likes",
+                "feeds",
+                "starterPacks",
+                "lists"
+              ]
+            }
+          },
+          "updatedAt": {"type": "string", "format": "datetime"}
+        }
+      }
+    }
+  }
+}

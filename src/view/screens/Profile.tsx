@@ -52,6 +52,11 @@ import {VideoClip_Stroke1_Corner0_Rounded as VideoIcon} from '#/components/icons
 import * as Layout from '#/components/Layout'
 import {ScreenHider} from '#/components/moderation/ScreenHider'
 import {ProfileStarterPacks} from '#/components/StarterPack/ProfileStarterPacks'
+import {
+  DEFAULT_PROFILE_TABS,
+  type ProfileTabKey,
+  useProfileTabsQuery,
+} from '#/features/profileTabs'
 import {type app} from '#/lexicons'
 import {navigate} from '#/Navigation'
 
@@ -110,6 +115,10 @@ function ProfileScreenInner({route}: Props) {
   } = useProfileQuery({
     did: resolvedDid,
   })
+  /* The owner's choice of tabs comes from their repo; if it can't be read,
+   * fall back to the defaults rather than hold up the profile. */
+  const {data: profileTabs, isPending: isProfileTabsPending} =
+    useProfileTabsQuery(resolvedDid)
 
   const onPressTryAgain = useCallback(() => {
     if (resolveError) {
@@ -139,7 +148,10 @@ function ProfileScreenInner({route}: Props) {
   // Most pushes will happen here, since we will have only placeholder data
   // A disabled dependent query remains pending, so only consider the profile
   // pending once handle resolution has produced a DID.
-  if (isDidPending || (!!resolvedDid && isProfilePending)) {
+  if (
+    isDidPending ||
+    (!!resolvedDid && (isProfilePending || isProfileTabsPending))
+  ) {
     return (
       <Layout.Content>
         <ProfileHeaderLoading />
@@ -172,6 +184,7 @@ function ProfileScreenInner({route}: Props) {
         isPlaceholderProfile={isPlaceholderProfile}
         hideBackButton={!!route.params.hideBackButton}
         tab={route.params.tab}
+        visibleTabs={profileTabs ?? DEFAULT_PROFILE_TABS}
       />
     )
   }
@@ -195,12 +208,14 @@ function ProfileScreenLoaded({
   moderationOpts,
   hideBackButton,
   tab,
+  visibleTabs,
 }: {
   profile: app.bsky.actor.defs.ProfileViewDetailed
   moderationOpts: ModerationOpts
   hideBackButton: boolean
   isPlaceholderProfile: boolean
   tab?: string
+  visibleTabs: ProfileTabKey[]
 }) {
   const t = useTheme()
   const {gtMobile} = useBreakpoints()
@@ -247,25 +262,32 @@ function ProfileScreenLoaded({
   const isMe = profile.did === currentAccount?.did
   const hasLabeler = !!profile.associated?.labeler
   const showFiltersTab = hasLabeler
-  const showPostsTab = true
+  /* What the owner chose to show (Edit profile > Show on your profile). */
+  const chosen = new Set<ProfileTabKey>(visibleTabs)
+  const showPostsTab = chosen.has('posts')
   // Reply deep links must work without a session so crawlers can index reply-heavy profiles.
-  const showRepliesTab = hasSession || tab === 'replies'
-  const showMediaTab = !hasLabeler
+  const showRepliesTab =
+    chosen.has('replies') && (hasSession || tab === 'replies')
+  const showMediaTab = chosen.has('media') && !hasLabeler
   /*
    * mu has no separate Videos tab: videos play inline and are in Media. Old
    * links to the videos tab open Media instead.
    */
   const showVideosTab = false
-  const showLikesTab = isMe
+  // Likes can only be listed for their owner, so only ever show to them.
+  const showLikesTab = chosen.has('likes') && isMe
   const feedGenCount = profile.associated?.feedgens || 0
-  const showFeedsTab = isMe || feedGenCount > 0
+  const showFeedsTab = chosen.has('feeds') && (isMe || feedGenCount > 0)
   const starterPackCount = profile.associated?.starterPacks || 0
-  const showStarterPacksTab = isMe || starterPackCount > 0
+  const showStarterPacksTab =
+    chosen.has('starterPacks') && (isMe || starterPackCount > 0)
   // subtract starterpack count from list count, since starterpacks are a type of list
   const listCount = (profile.associated?.lists || 0) - starterPackCount
   // Lists are public, so direct links can bypass the logged-in-only tab visibility.
   const showListsTab =
-    (hasSession || tab === 'lists') && (isMe || listCount > 0)
+    chosen.has('lists') &&
+    (hasSession || tab === 'lists') &&
+    (isMe || listCount > 0)
 
   const sectionTitles = [
     showFiltersTab ? _(msg`Labels`) : undefined,

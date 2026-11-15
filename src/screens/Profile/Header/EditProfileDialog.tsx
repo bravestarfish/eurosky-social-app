@@ -43,6 +43,13 @@ import {
   useOwnProfileLinksQuery,
   usePrepareProfileLinksSave,
 } from '#/features/profileLinks'
+import {
+  normalizeProfileTabs,
+  ProfileTabsEditor,
+  sameProfileTabs,
+  useProfileTabsQuery,
+  useSaveProfileTabsMutation,
+} from '#/features/profileTabs'
 import {type app} from '#/lexicons'
 
 export function EditProfileDialog({
@@ -212,7 +219,15 @@ function DialogInner({
     !!editedLinks &&
     !!storedLinks &&
     !sameProfileLinks(editedLinks, storedLinks)
-  const dirty = profileDirty || linksDirty
+  const {data: storedTabs, isError: tabsError} = useProfileTabsQuery(
+    profile.did,
+  )
+  const [editedTabs, setEditedTabs] = useState<string[]>()
+  const tabs = normalizeProfileTabs(editedTabs ?? storedTabs ?? [])
+  const tabsDirty =
+    !!editedTabs && !!storedTabs && !sameProfileTabs(tabs, storedTabs)
+  const {mutateAsync: saveProfileTabs} = useSaveProfileTabsMutation()
+  const dirty = profileDirty || linksDirty || tabsDirty
 
   useEffect(() => {
     setDirty(dirty)
@@ -281,15 +296,26 @@ function DialogInner({
         links: prepared,
         linksDirty,
       })
-      await updateProfileMutation({
-        profile,
-        updates: save.updates,
-        /* Wait for ordinary profile edits, not refs a filtered AppView may omit. */
-        commitFields: save.fields,
-        newUserAvatar,
-        newUserBanner,
-      })
-      await save.onSuccess()
+      if (
+        profileDirty ||
+        linksDirty ||
+        newUserAvatar !== undefined ||
+        newUserBanner !== undefined ||
+        prepared
+      ) {
+        await updateProfileMutation({
+          profile,
+          updates: save.updates,
+          /* Wait for ordinary profile edits, not refs a filtered AppView may omit. */
+          commitFields: save.fields,
+          newUserAvatar,
+          newUserBanner,
+        })
+        await save.onSuccess()
+      }
+      if (tabsDirty) {
+        await saveProfileTabs(tabs)
+      }
       if (prepared && linksDirty) {
         logProfileLinkChanges(ax, storedLinks ?? [], prepared.savedLinks)
       }
@@ -578,6 +604,18 @@ function DialogInner({
             }}
           />
         )}
+
+        {storedTabs ? (
+          <ProfileTabsEditor
+            values={tabs}
+            onChange={setEditedTabs}
+            disabled={isSaving}
+          />
+        ) : tabsError ? (
+          <Text style={[a.text_sm]}>
+            <Trans>Couldn’t load your profile tabs.</Trans>
+          </Text>
+        ) : null}
       </View>
     </Dialog.ScrollableInner>
   )
