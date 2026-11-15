@@ -1,4 +1,4 @@
-import {useCallback, useEffect} from 'react'
+import {useCallback, useEffect, useState} from 'react'
 import {Pressable, View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
@@ -26,8 +26,7 @@ import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {Logotype} from '#/view/icons/Logotype'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
-import {useDialogControl} from '#/components/Dialog'
-import {AccountMenuDialog} from '#/components/dialogs/AccountMenu'
+import {AccountMenuPopover} from '#/components/dialogs/AccountMenuPopover'
 import {
   Bell_Filled_Corner0_Rounded as BellFilled,
   Bell_Stroke2_Corner0_Rounded as Bell,
@@ -85,7 +84,7 @@ export function BottomBarWeb() {
     return () => footerHeight.set(0)
   }, [footerHeight])
   const hideBorder = useHideBottomBarBorder()
-  const accountMenuControl = useDialogControl()
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false)
   const {data: profile} = useProfileQuery({did: currentAccount?.did})
   const iconWidth = ICON_WIDTH
   const moderationInboxCount = useModerationInboxBadgeCount()
@@ -111,12 +110,19 @@ export function BottomBarWeb() {
   }, [requestSwitchToAccount, closeAllActiveElements])
 
   const onOpenAccountMenu = useCallback(() => {
-    accountMenuControl.open()
-  }, [accountMenuControl])
+    setAccountMenuOpen(true)
+  }, [])
+  const onCloseAccountMenu = useCallback(() => {
+    setAccountMenuOpen(false)
+  }, [])
 
   return (
     <>
-      <AccountMenuDialog control={accountMenuControl} />
+      <AccountMenuPopover
+        open={accountMenuOpen}
+        onClose={onCloseAccountMenu}
+        bottomOffset={footerHeight.get()}
+      />
 
       <Animated.View
         role="navigation"

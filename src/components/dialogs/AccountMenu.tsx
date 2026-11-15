@@ -38,14 +38,23 @@ export function AccountMenuDialog({
     <Dialog.Outer control={control} nativeOptions={{preventExpansion: true}}>
       <Dialog.Handle />
       <Dialog.ScrollableInner label={l`Account menu`}>
-        <Inner control={control} />
+        <AccountMenuContent onClose={then => control.close(then)} />
         <Dialog.Close />
       </Dialog.ScrollableInner>
     </Dialog.Outer>
   )
 }
 
-function Inner({control}: {control: Dialog.DialogControlProps}) {
+/**
+ * The menu's rows, shared by the dialog (apps) and the popover (mobile web).
+ * `onClose` closes the container and then runs `then`, so navigation happens
+ * after the close animation.
+ */
+export function AccountMenuContent({
+  onClose,
+}: {
+  onClose: (then?: () => void) => void
+}) {
   const {t: l, i18n} = useLingui()
   const ax = useAnalytics()
   const aa = useAgeAssurance()
@@ -58,11 +67,11 @@ function Inner({control}: {control: Dialog.DialogControlProps}) {
 
   const onSelectAccount = (account: SessionAccount) => {
     if (account.did !== currentAccount?.did) {
-      control.close(() => {
+      onClose(() => {
         void onPressSwitchAccount(account, 'SwitchAccount')
       })
     } else {
-      control.close(() => {
+      onClose(() => {
         navigation.dispatch(
           getTabNavigationAction('MyProfile', currentAccount?.handle),
         )
@@ -71,7 +80,7 @@ function Inner({control}: {control: Dialog.DialogControlProps}) {
   }
 
   const onPressAddAccount = () => {
-    control.close(() => {
+    onClose(() => {
       setShowLoggedOut(true)
     })
   }
@@ -81,7 +90,7 @@ function Inner({control}: {control: Dialog.DialogControlProps}) {
       item: TAB_TO_NAV_ITEM[tab],
       surface: 'accountMenu',
     })
-    control.close(() => {
+    onClose(() => {
       navigation.dispatch(getTabNavigationAction(tab, currentAccount?.handle))
     })
   }
