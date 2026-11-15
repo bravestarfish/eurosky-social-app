@@ -1,5 +1,5 @@
 import {useCallback, useEffect} from 'react'
-import {View} from 'react-native'
+import {Pressable, View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import {msg, plural} from '@lingui/core/macro'
@@ -27,12 +27,16 @@ import {Logotype} from '#/view/icons/Logotype'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
-import {SwitchAccountDialog} from '#/components/dialogs/SwitchAccount'
+import {AccountMenuDialog} from '#/components/dialogs/AccountMenu'
 import {
   Bell_Filled_Corner0_Rounded as BellFilled,
   Bell_Stroke2_Corner0_Rounded as Bell,
 } from '#/components/icons/Bell'
 import {type Props as SVGIconProps} from '#/components/icons/common'
+import {
+  HomeOpen_Filled_Corner0_Rounded as HomeFilled,
+  HomeOpen_Stoke2_Corner0_Rounded as Home,
+} from '#/components/icons/HomeOpen'
 import {
   MagnifyingGlass_Filled_Stroke2_Corner0_Rounded as MagnifyingGlassFilled,
   MagnifyingGlass_Stroke2_Corner0_Rounded as MagnifyingGlass,
@@ -41,10 +45,6 @@ import {
   Newspaper_Filled_Corner2_Rounded as NewspaperFilled,
   Newspaper_Stroke2_Corner2_Rounded as Newspaper,
 } from '#/components/icons/Newspaper'
-import {
-  Posts_Stroke2_Corner2_Rounded as Posts,
-  Posts_Stroke3_Corner2_Rounded as PostsActive,
-} from '#/components/icons/Posts'
 import {Text} from '#/components/Typography'
 import {useAgeAssurance} from '#/ageAssurance'
 import {useAnalytics} from '#/analytics'
@@ -85,7 +85,7 @@ export function BottomBarWeb() {
     return () => footerHeight.set(0)
   }, [footerHeight])
   const hideBorder = useHideBottomBarBorder()
-  const accountSwitchControl = useDialogControl()
+  const accountMenuControl = useDialogControl()
   const {data: profile} = useProfileQuery({did: currentAccount?.did})
   const iconWidth = ICON_WIDTH
   const moderationInboxCount = useModerationInboxBadgeCount()
@@ -110,13 +110,13 @@ export function BottomBarWeb() {
     // setShowLoggedOut(true)
   }, [requestSwitchToAccount, closeAllActiveElements])
 
-  const onLongPressProfile = useCallback(() => {
-    accountSwitchControl.open()
-  }, [accountSwitchControl])
+  const onOpenAccountMenu = useCallback(() => {
+    accountMenuControl.open()
+  }, [accountMenuControl])
 
   return (
     <>
-      <SwitchAccountDialog control={accountSwitchControl} />
+      <AccountMenuDialog control={accountMenuControl} />
 
       <Animated.View
         role="navigation"
@@ -137,12 +137,12 @@ export function BottomBarWeb() {
               routeName="Home"
               href="/"
               navItem="home"
-              label={_(msg({message: 'Posts', context: 'bottom bar tab'}))}
+              label={_(msg({message: 'Home', context: 'bottom bar tab'}))}
               hasNew={hasHomeBadge && isFollowingV2HomeDotEnabled(ax)}>
               {({isActive}) => (
                 <TabIcon
                   isActive={isActive}
-                  Icon={isActive ? PostsActive : Posts}
+                  Icon={isActive ? HomeFilled : Home}
                 />
               )}
             </NavItem>
@@ -203,7 +203,8 @@ export function BottomBarWeb() {
               navItem="profile"
               label={_(msg({message: 'Profile', context: 'bottom bar tab'}))}
               hasNew={hasUnreadMessages || moderationInboxCount > 0}
-              onLongPress={onLongPressProfile}>
+              onLongPress={onOpenAccountMenu}
+              onPressOnOwnProfile={onOpenAccountMenu}>
               {({isActive}) => (
                 <View style={styles.ctrlIconSizingWrapper}>
                   <View
@@ -325,6 +326,7 @@ function NavItem({
   hasNew,
   notificationCount,
   onLongPress,
+  onPressOnOwnProfile,
 }: {
   children: (props: {isActive: boolean}) => React.ReactNode
   href: string
@@ -334,6 +336,8 @@ function NavItem({
   hasNew?: boolean
   notificationCount?: string
   onLongPress?: () => void
+  /** On your own profile a tap has nowhere new to go, so it does this. */
+  onPressOnOwnProfile?: () => void
 }) {
   const t = useTheme()
   const {_} = useLingui()
@@ -368,16 +372,12 @@ function NavItem({
         // Messages, Library and Settings open from your profile.
         (routeName === 'Profile' && isProfileSpaceRoute(currentRoute.name))
 
-  return (
-    <Link
-      href={href}
-      style={[styles.ctrl, a.pb_lg]}
-      navigationAction={isOnDifferentProfile ? 'push' : 'navigate'}
-      aria-role="link"
-      aria-label={label}
-      accessible={true}
-      onBeforePress={onBeforePress}
-      onLongPress={onLongPress}>
+  const isOnOwnProfile =
+    currentRoute.name === 'Profile' &&
+    (currentRoute.params as CommonNavigatorParams['Profile']).name ===
+      currentAccount?.handle
+  const content = (
+    <>
       {children({isActive})}
       <TabLabel isActive={isActive} label={label} />
       {notificationCount ? (
@@ -400,6 +400,36 @@ function NavItem({
           style={[styles.hasNewBadge, {backgroundColor: t.palette.primary_500}]}
         />
       ) : null}
+    </>
+  )
+
+  if (onPressOnOwnProfile && isOnOwnProfile) {
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        accessibilityHint={_(
+          msg`Opens accounts, messages, library and settings`,
+        )}
+        onPress={onPressOnOwnProfile}
+        onLongPress={onLongPress}
+        style={[styles.ctrl, a.pb_lg]}>
+        {content}
+      </Pressable>
+    )
+  }
+
+  return (
+    <Link
+      href={href}
+      style={[styles.ctrl, a.pb_lg]}
+      navigationAction={isOnDifferentProfile ? 'push' : 'navigate'}
+      aria-role="link"
+      aria-label={label}
+      accessible={true}
+      onBeforePress={onBeforePress}
+      onLongPress={onLongPress}>
+      {content}
     </Link>
   )
 }

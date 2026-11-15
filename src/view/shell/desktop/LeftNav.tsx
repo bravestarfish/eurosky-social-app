@@ -67,6 +67,10 @@ import {type Props as SVGIconProps} from '#/components/icons/common'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as EllipsisIcon} from '#/components/icons/DotGrid'
 import {EditBig_Stroke2_Corner2_Rounded as EditBigIcon} from '#/components/icons/EditBig'
 import {
+  HomeOpen_Filled_Corner0_Rounded as HomeFilledIcon,
+  HomeOpen_Stoke2_Corner0_Rounded as HomeIcon,
+} from '#/components/icons/HomeOpen'
+import {
   MagnifyingGlass_Filled_Stroke2_Corner0_Rounded as MagnifyingGlassFilledIcon,
   MagnifyingGlass_Stroke2_Corner0_Rounded as MagnifyingGlassIcon,
 } from '#/components/icons/MagnifyingGlass'
@@ -79,10 +83,6 @@ import {
   Newspaper_Stroke2_Corner2_Rounded as NewspaperIcon,
 } from '#/components/icons/Newspaper'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
-import {
-  Posts_Stroke2_Corner2_Rounded as PostsIcon,
-  Posts_Stroke3_Corner2_Rounded as PostsActiveIcon,
-} from '#/components/icons/Posts'
 import {
   SettingsGear2_Filled_Corner0_Rounded as SettingsFilledIcon,
   SettingsGear2_Stroke2_Corner0_Rounded as SettingsIcon,
@@ -733,15 +733,15 @@ export function DesktopLeftNav({
       {hasSession && (
         <>
           <NavItem
-            label={l({message: 'Posts', context: 'main navigation'})}
+            label={l({message: 'Home', context: 'main navigation'})}
             href="/"
             navItem="home"
             onNavigateTab={onNavigateTab}
             minimal={leftNavMinimal}
             hasNew={hasHomeBadge && isFollowingV2HomeDotEnabled(ax)}
             icons={{
-              inactive: PostsIcon,
-              active: PostsActiveIcon,
+              inactive: HomeIcon,
+              active: HomeFilledIcon,
             }}
           />
           <NavItem

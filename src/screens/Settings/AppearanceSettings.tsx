@@ -85,6 +85,15 @@ export function AppearanceSettingsScreen({}: Props) {
         </Layout.Header.Outer>
         <Layout.Content>
           <SettingsList.Container>
+            <SettingsList.LinkItem
+              to="/settings/pet-companion"
+              label={l`Companion`}>
+              <SettingsList.ItemIcon icon={HeartIcon} />
+              <SettingsList.ItemText>
+                <Trans>Companion</Trans>
+              </SettingsList.ItemText>
+            </SettingsList.LinkItem>
+            <SettingsList.Divider />
             <AppearanceToggleButtonGroup
               title={l`Color mode`}
               icon={PhoneIcon}
@@ -215,14 +224,6 @@ export function AppearanceSettingsScreen({}: Props) {
               <SettingsList.ItemIcon icon={AccessibilityIcon} />
               <SettingsList.ItemText>
                 <Trans>Accessibility</Trans>
-              </SettingsList.ItemText>
-            </SettingsList.LinkItem>
-            <SettingsList.LinkItem
-              to="/settings/pet-companion"
-              label={l`Companion`}>
-              <SettingsList.ItemIcon icon={HeartIcon} />
-              <SettingsList.ItemText>
-                <Trans>Companion</Trans>
               </SettingsList.ItemText>
             </SettingsList.LinkItem>
             {BRAND.decorations.enabled && (

@@ -59,7 +59,16 @@ export function ContentAndMediaSettingsScreen({}: Props) {
       </Layout.Header.Outer>
       <Layout.Content>
         <SettingsList.Container>
-          <SettingsList.GroupHeadingText first>
+          <SettingsList.LinkItem
+            to="/settings/network-services/content-service"
+            label={_(msg`Content service`)}>
+            <SettingsList.ItemIcon icon={EarthIcon} />
+            <SettingsList.ItemText>
+              <Trans>Content service</Trans>
+            </SettingsList.ItemText>
+          </SettingsList.LinkItem>
+
+          <SettingsList.GroupHeadingText>
             <Trans>Following feed</Trans>
           </SettingsList.GroupHeadingText>
           <FollowingFeedPreferencesGroup />

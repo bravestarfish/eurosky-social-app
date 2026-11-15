@@ -173,8 +173,7 @@ export type Events = {
       | 'settings'
       | 'messages'
       | 'library'
-      | 'switchAccount'
-    surface: 'bottomBar' | 'profileHeader' | 'topBar' | 'leftNav'
+    surface: 'bottomBar' | 'accountMenu' | 'topBar' | 'leftNav'
   }
   'deepLink:referrerReceived': {
     to: string

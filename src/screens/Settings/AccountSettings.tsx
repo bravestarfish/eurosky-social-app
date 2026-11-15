@@ -24,7 +24,6 @@ import {Car_Stroke2_Corner2_Rounded as CarIcon} from '#/components/icons/Car'
 import {Download_Stroke2_Corner0_Rounded as DownloadIcon} from '#/components/icons/Download'
 import {Envelope_Stroke2_Corner2_Rounded as EnvelopeIcon} from '#/components/icons/Envelope'
 import {Freeze_Stroke2_Corner2_Rounded as FreezeIcon} from '#/components/icons/Freeze'
-import {Earth_Stroke2_Corner2_Rounded as EarthIcon} from '#/components/icons/Globe'
 import {Key_Stroke2_Corner2_Rounded as KeyIcon} from '#/components/icons/Key'
 import {Lock_Stroke2_Corner2_Rounded as LockIcon} from '#/components/icons/Lock'
 import {PencilLine_Stroke2_Corner2_Rounded as PencilIcon} from '#/components/icons/Pencil'
@@ -225,7 +224,7 @@ export function AccountSettingsScreen({}: Props) {
           </SettingsList.LinkItem>
 
           <SettingsList.GroupHeadingText>
-            <Trans>Your data and network</Trans>
+            <Trans>Your data</Trans>
           </SettingsList.GroupHeadingText>
           <SettingsList.PressableItem
             label={l`Export my data`}
@@ -236,14 +235,6 @@ export function AccountSettingsScreen({}: Props) {
             </SettingsList.ItemText>
             <SettingsList.Chevron />
           </SettingsList.PressableItem>
-          <SettingsList.LinkItem
-            to="/settings/network-services/content-service"
-            label={l`Content service`}>
-            <SettingsList.ItemIcon icon={EarthIcon} />
-            <SettingsList.ItemText>
-              <Trans>Content service</Trans>
-            </SettingsList.ItemText>
-          </SettingsList.LinkItem>
           <SettingsList.LinkItem
             to="/settings/network-services/transfer-app-data"
             label={l`Transfer app data`}>

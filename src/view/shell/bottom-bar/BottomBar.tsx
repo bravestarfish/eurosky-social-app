@@ -32,12 +32,16 @@ import {Logotype} from '#/view/icons/Logotype'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
-import {SwitchAccountDialog} from '#/components/dialogs/SwitchAccount'
+import {AccountMenuDialog} from '#/components/dialogs/AccountMenu'
 import {
   Bell_Filled_Corner0_Rounded as BellFilled,
   Bell_Stroke2_Corner0_Rounded as Bell,
 } from '#/components/icons/Bell'
 import {type Props as SVGIconProps} from '#/components/icons/common'
+import {
+  HomeOpen_Filled_Corner0_Rounded as HomeFilled,
+  HomeOpen_Stoke2_Corner0_Rounded as Home,
+} from '#/components/icons/HomeOpen'
 import {
   MagnifyingGlass_Filled_Stroke2_Corner0_Rounded as MagnifyingGlassFilled,
   MagnifyingGlass_Stroke2_Corner0_Rounded as MagnifyingGlass,
@@ -46,10 +50,6 @@ import {
   Newspaper_Filled_Corner2_Rounded as NewspaperFilled,
   Newspaper_Stroke2_Corner2_Rounded as Newspaper,
 } from '#/components/icons/Newspaper'
-import {
-  Posts_Stroke2_Corner2_Rounded as Posts,
-  Posts_Stroke3_Corner2_Rounded as PostsActive,
-} from '#/components/icons/Posts'
 import {Text} from '#/components/Typography'
 import {useAgeAssurance} from '#/ageAssurance'
 import {useAnalytics} from '#/analytics'
@@ -208,7 +208,7 @@ function MainBarItems({
   const numUnreadMessages = useUnreadMessageCount()
   const hasHomeBadge = useHomeBadge()
   const {data: profile} = useProfileQuery({did: currentAccount?.did})
-  const accountSwitchControl = useDialogControl()
+  const accountMenuControl = useDialogControl()
   const haptics = useHaptics()
   const onPressTab = useOnPressTab(navigation)
   const [demoMode] = useDemoMode()
@@ -220,18 +220,30 @@ function MainBarItems({
 
   const onLongPressProfile = () => {
     haptics.longPress()
-    accountSwitchControl.open()
+    accountMenuControl.open()
+  }
+
+  /* On your own profile a tap has nowhere new to go, so it opens the menu. */
+  const onPressProfile = () => {
+    if (
+      getTabState(navigation.getState(), 'MyProfile') === TabState.InsideAtRoot
+    ) {
+      haptics.tap()
+      accountMenuControl.open()
+    } else {
+      onPressTab('MyProfile')
+    }
   }
 
   return (
     <>
-      <SwitchAccountDialog control={accountSwitchControl} />
+      <AccountMenuDialog control={accountMenuControl} />
       <Btn
         testID="bottomBarHomeBtn"
-        label={l({message: 'Posts', context: 'bottom bar tab'})}
+        label={l({message: 'Home', context: 'bottom bar tab'})}
         isActive={isAtHome}
         icon={
-          <TabIcon isActive={isAtHome} Icon={Posts} ActiveIcon={PostsActive} />
+          <TabIcon isActive={isAtHome} Icon={Home} ActiveIcon={HomeFilled} />
         }
         hasNew={hasHomeBadge && isFollowingV2HomeDotEnabled(ax)}
         onPress={() => onPressTab('Home')}
@@ -331,13 +343,13 @@ function MainBarItems({
         }
         // Messages and Settings live on your profile, so flag what is new there.
         hasNew={hasUnreadMessages || moderationInboxCount > 0}
-        onPress={() => onPressTab('MyProfile')}
+        onPress={onPressProfile}
         onLongPress={onLongPressProfile}
         accessibilityRole="tab"
         accessibilityHint={
           hasUnreadMessages
-            ? l`You have unread messages. Long-press to switch account.`
-            : l`Long-press to switch account.`
+            ? l`You have unread messages. Long-press for accounts, messages, library and settings.`
+            : l`Long-press for accounts, messages, library and settings.`
         }
       />
     </>
